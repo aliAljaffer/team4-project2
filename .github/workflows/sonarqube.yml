@@ -14,6 +14,11 @@ jobs:
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v3
 
+            - name: Login to Azure before init remote state
+              uses: azure/login@v2
+              with:
+                  creds: ${{secrets.AZURE_CREDENTIALS}}
+
             - name: Terraform Init
               run: cd terraform-sonarqube && terraform init
 
