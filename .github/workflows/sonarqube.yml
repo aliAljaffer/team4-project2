@@ -1,60 +1,153 @@
 name: Provision & Setup SonarQube
 
 on:
-    push:
-        branches: [main]
+  push:
+    branches: [main]
+env:
+  TF_WORKING_DIR: ./terraform-sonarqube
+  SONAR_PORT: 9000
 
 jobs:
-    provision_sq_vm:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v5
+  provision_sq_vm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
 
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
-            - name: Login to Azure before init remote state
-              uses: azure/login@v2
-              with:
-                  creds: ${{secrets.AZURE_CREDENTIALS}}
+      - name: Login to Azure before init remote state
+        uses: azure/login@v2
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
 
-            - name: Terraform Init
-              run: cd terraform-sonarqube && terraform init
+      - name: Terraform Init
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: terraform init
 
-            - name: Terraform Apply
-              run: cd terraform-sonarqube && terraform apply --auto-approve
+      - name: Terraform Apply
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: terraform apply --auto-approve
 
-            - name: Retrieve the VM IP and add to ENV
-              run: |
-                  VM_IP=$(cd terraform-sonarqube && tf output -json | jq '.ip.value' | tr -d '"')
-                  echo "VM_IP=$VM_IP" >> $GITHUB_ENV
+      - name: Retrieve the VM IP and add to ENV
+        id: get_vm_ip
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: |
+          VM_IP=$(terraform output -raw ip)
+          echo "vm_ip=$VM_IP" >> $GITHUB_ENV
 
-            - name: Wait for SonarQube
-              run: sleep 60
+      - name: Wait for SonarQube to be ready
+        run: |
+          echo "Waiting for SonarQube at http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}"
+          max_attempts=30
+          attempt=0
 
-            - name: Change default admin password
-              run: |
-                  curl -s -u admin:admin \
-                  -X POST "http://${{env.VM_IP}}:9000/api/users/change_password" \
-                  -d "login=admin" \
-                  -d "previousPassword=admin" \
-                  -d "password=${{secrets.NEW_ADMIN_PASSWORD}}"
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f -s -u admin:admin "http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}/api/system/status" | grep -q '"status":"UP"'; then
+              echo "SonarQube is ready!"
+              exit 0
+            fi
 
-            - name: Generate SonarQube Token
-              run: |
-                  token=$(curl -s -u admin:admin -X POST "http://${{env.VM_IP}}:9000/api/user_tokens/generate" -d "name=ci-token" | jq -r '.token')
-                  echo "::add-mask::$token"
-                  echo "SONAR_TOKEN=$token" >> $GITHUB_ENV
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt/$max_attempts - SonarQube not ready yet..."
+            sleep 10
+          done
 
-    scan:
-        needs: provision_sq_vm
-        runs-on: ubuntu-latest
-        steps:
-            - name: Run SonarQube Scan
-              run: |
-                  sonar-scanner \
-                    -Dsonar.projectKey=my-project \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://${{env.VM_IP}}:9000 \
-                    -Dsonar.login=${{ env.SONAR_TOKEN }}
+          echo "SonarQube failed to start within the expected time"
+          exit 1
+
+      - name: Change default admin password
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -u admin:admin \
+            -X POST "http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}/api/users/change_password" \
+            -d "login=admin" \
+            -d "previousPassword=admin" \
+            -d "password=${{ secrets.NEW_ADMIN_PASSWORD }}")
+
+          http_code=$(echo "$response" | tail -n1)
+
+          if [ "$http_code" -ne 204 ] && [ "$http_code" -ne 200 ]; then
+            echo "Failed to change password. HTTP code: $http_code"
+            echo "$response"
+            exit 1
+          fi
+
+          echo "Password changed successfully"
+
+      - name: Generate SonarQube Token
+        id: generate_token
+        run: |
+          token=$(curl -s -u admin:${{ secrets.NEW_ADMIN_PASSWORD }} \
+            -X POST "http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}/api/user_tokens/generate" \
+            -d "name=ci-token-$(date +%s)" | jq -r '.token')
+
+          if [ -z "$token" ] || [ "$token" = "null" ]; then
+            echo "Failed to generate token"
+            exit 1
+          fi
+
+          echo "::add-mask::$token"
+          echo "sonar_token=$token" >> $GITHUB_OUTPUT
+          echo "Token generated successfully"
+      - name: Verify Token Works
+        run: |
+          status=$(curl -s -u ${{ steps.generate_token.outputs.sonar_token }}: \
+            "http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}/api/authentication/validate" \
+            | jq -r '.valid')
+
+          if [ "$status" != "true" ]; then
+            echo "Token validation failed"
+            exit 1
+          fi
+
+          echo "Token validated successfully"
+  scan_with_sqube:
+    needs: provision_sq_vm
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: team4-project2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ needs.provision_sq_vm.outputs.sonar_token }}
+          SONAR_HOST_URL: http://${{ needs.provision_sq_vm.outputs.vm_ip }}:${{env.SONAR_PORT}}
+        with:
+          args: >
+            -Dsonar.projectKey=${{env.PROJECT_NAME}}
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/**
+      - name: Wait for Quality Gate
+        run: |
+          max_attempts=60
+          attempt=0
+
+          while [ $attempt -lt $max_attempts ]; do
+            status=$(curl -s -u ${{ needs.provision_sq_vm.outputs.sonar_token }}: \
+              "http://${{ needs.provision_sq_vm.outputs.vm_ip }}:${{env.SONAR_PORT}}/api/qualitygates/project_status?projectKey=${{env.PROJECT_NAME}}" \
+              | jq -r '.projectStatus.status')
+
+            if [ "$status" = "OK" ]; then
+              echo "✓ Quality Gate passed!"
+              exit 0
+            elif [ "$status" = "ERROR" ]; then
+              echo "✗ Quality Gate failed!"
+              exit 1
+            elif [ "$status" = "NONE" ]; then
+              echo "Waiting for analysis to complete..."
+            fi
+
+            attempt=$((attempt + 1))
+            sleep 5
+          done
+
+          echo "Timeout waiting for Quality Gate result"
+          exit 1
