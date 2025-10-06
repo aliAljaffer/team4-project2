@@ -36,6 +36,7 @@ variable "app_gw_ip" {
 locals {
   frontend_app_name = "${var.resource_prefix}-frontend"
   backend_app_name = "${var.resource_prefix}-backend"
+  dockerhub_username = ""
 }
 # ------------------
 
@@ -53,7 +54,7 @@ resource "azurerm_linux_web_app" "frontend_app" {
     
     always_on = true
     application_stack {
-      docker_image_name = ""
+      docker_image_name     = "${local.dockerhub_username}/fe-image-project:latest"
       docker_registry_url = "https://index.docker.io"
     }
     health_check_path = "/"
@@ -87,7 +88,7 @@ resource "azurerm_linux_web_app" "backend_app" {
       allowed_origins = ["https://${local.frontend_app_name}.azurewebsites.net"]
     }
     application_stack {
-      docker_image_name = ""
+      docker_image_name     = "${local.dockerhub_username}/fe-image-project:latest"
       docker_registry_url = "https://index.docker.io"
     }
     health_check_path = "/health"
@@ -136,8 +137,16 @@ resource "azurerm_service_plan" "be_P1v3" {
 
 # Outputs
 
-output "links" {
-  value = [for link in [azurerm_linux_web_app.frontend_app.default_hostname, azurerm_linux_web_app.backend_app.default_hostname] : link]
+output "frontend_app_hostname" {
+  value = azurerm_linux_web_app.frontend_app.default_hostname
+}
+
+output "backend_app_hostname" {
+  value = azurerm_linux_web_app.backend_app.default_hostname
+}
+
+output "app_gateway_public_ip" {
+  value = azurerm_public_ip.app_gateway_public_ip.ip_address
 }
 # -----------------
 
