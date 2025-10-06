@@ -30,12 +30,6 @@ resource "azurerm_subnet" "db_subnet" {
   resource_group_name  = azurerm_resource_group.main_rg.name
   address_prefixes     = ["10.0.4.0/24"]
 }
-resource "azurerm_subnet" "sqube_subnet" {
-  name                 = "${var.resource_prefix}-sqube-subnet"
-  virtual_network_name = azurerm_virtual_network.sonarqube_vnet.name
-  resource_group_name  = azurerm_resource_group.main_rg.name
-  address_prefixes     = ["11.0.1.0/24"]
-}
 # Outputs
 # -----------------
 
