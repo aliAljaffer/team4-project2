@@ -1,0 +1,55 @@
+name: Provision & Setup SonarQube
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    provision_sq_vm:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v2
+
+            - name: Terraform Init
+              run: cd terraform-sonarqube && terraform init
+
+            - name: Terraform Apply
+              run: cd terraform-sonarqube && terraform apply --auto-approve
+
+            - name: Retrieve the VM IP and add to ENV
+              run: |
+                  VM_IP=$(cd terraform-sonarqube && tf output -json | jq '.["ip"].value' | tr -d '"')
+                  echo "VM_IP=$VM_IP" >> $GITHUB_ENV
+
+            - name: Wait for SonarQube
+              run: sleep 60
+
+            - name: Change default admin password
+              run: |
+                  curl -s -u admin:admin \
+                  -X POST "http://${{env.VM_IP}}:9000/api/users/change_password" \
+                  -d "login=admin" \
+                  -d "previousPassword=admin" \
+                  -d "password=${{secrets.NEW_ADMIN_PASSWORD}}"
+
+            - name: Generate SonarQube Token
+              run: |
+                  token=$(curl -s -u admin:admin -X POST "http://${{env.VM_IP}}:9000/api/user_tokens/generate" -d "name=ci-token" | jq -r '.token')
+                  echo "::add-mask::$token"
+                  echo "SONAR_TOKEN=$token" >> $GITHUB_ENV
+
+    scan:
+        needs: provision_sq_vm
+        runs-on: ubuntu-latest
+        steps:
+            - name: Run SonarQube Scan
+              run: |
+                  sonar-scanner \
+                    -Dsonar.projectKey=my-project \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://${{env.VM_IP}}:9000 \
+                    -Dsonar.login=${{ env.SONAR_TOKEN }}
