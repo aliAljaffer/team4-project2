@@ -32,7 +32,7 @@ variable "os_disk_name" {
 variable "os_disk_storage_account_type" {
 
  type = string 
- default = "Premium_LRS"
+ default = "Standard_LRS"
 }
 
 variable "source_image_reference_publisher" {
@@ -53,7 +53,7 @@ variable "source_image_reference_sku" {
 
  type = string
 
- default = "18.04-LTS"
+ default = "22.04-LTS"
  }
 
 variable "source_image_reference_version" {
@@ -73,5 +73,8 @@ variable "vm_disable_password_authentication" {
 
  type = bool
 
- default = true
+ default = false
  }
+variable "vm_admin_password" {
+  type      = string
+}
