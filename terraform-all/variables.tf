@@ -7,6 +7,11 @@ variable "resource_prefix" {
   default = "team4-project2"
 }
 
+variable "rg_name" {
+  type    = string
+  default = "${var.resource_prefix}-rg"
+}
+
 variable "location" {
   type    = string
   default = "ukwest"
@@ -77,4 +82,48 @@ variable "vm_disable_password_authentication" {
  }
 variable "vm_admin_password" {
   type      = string
+
+variable "fe_sunet_id" {
+  type    = string
+  
+}
+
+variable "be_sunet_id" {
+  type    = string
+  
+}
+
+variable "app_gw_ip" {
+  type    = string
+  
+}
+
+variable "db_host" {
+  type    = string
+  
+}
+
+variable "db_name" {
+  type    = string
+  
+}
+
+variable "db_port" {
+  type    = string
+  
+}
+
+variable "db_username" {
+  type    = string
+  
+}
+
+variable "db_password" {
+  type    = string
+  
+}
+
+variable "db_driver" {
+  type    = string
+  
 }
