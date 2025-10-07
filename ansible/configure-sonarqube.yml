@@ -20,7 +20,7 @@
       register: sonar_status
       until: sonar_status.json.status == "UP"
       retries: 30
-      delay: 10
+      delay: 12
 
     - name: Change default admin password
       uri:
