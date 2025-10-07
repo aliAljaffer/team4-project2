@@ -1,0 +1,78 @@
+name: Provision & Setup SonarQube with Ansible
+
+on:
+  push:
+    branches: [main]
+
+env:
+  TF_WORKING_DIR: ./terraform-sonarqube
+  SONAR_PORT: 9000
+
+jobs:
+  provision_and_configure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: |
+          pip install ansible requests
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+
+      - name: Terraform Init
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: terraform apply --auto-approve
+
+      - name: Get VM IP
+        id: get_vm_ip
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: |
+          VM_IP=$(terraform output -raw ip)
+          echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
+
+      - name: Configure SonarQube with Ansible
+        id: configure
+        working-directory: ./ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook \
+            -i "${{ steps.get_vm_ip.outputs.vm_ip }}," \
+            -e "sonar_host=${{ steps.get_vm_ip.outputs.vm_ip }}" \
+            -e "sonar_port=${{ env.SONAR_PORT }}" \
+            -e "new_admin_password=${{ secrets.NEW_ADMIN_PASSWORD }}" \
+            configure-sonarqube.yml \
+            --connection=local
+
+      - name: Extract SonarQube Token
+        id: get_token
+        run: |
+          SONAR_TOKEN=$(cat /tmp/sonar_token)
+          echo "::add-mask::$SONAR_TOKEN"
+          echo "sonar_token=$SONAR_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Display Outputs
+        run: |
+          echo "url=http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}" >> $GITHUB_OUTPUT
+          echo "SonarQube URL: http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}"
+          echo "Token: ${{ steps.get_token.outputs.sonar_token }}"
+          echo "Configuration completed successfully"
