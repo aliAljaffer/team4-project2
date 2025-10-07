@@ -58,12 +58,14 @@ jobs:
         working-directory: ./ansible
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          VM_IP: ${{ steps.get_vm_ip.outputs.vm_ip }}
+          NEW_ADMIN_PASSWORD: ${{ secrets.NEW_ADMIN_PASSWORD }}
         run: |
           ansible-playbook \
-            -i "${{ steps.get_vm_ip.outputs.vm_ip }}," \
-            -e "sonar_host=${{ steps.get_vm_ip.outputs.vm_ip }}" \
+            -i "${VM_IP}," \
+            -e "sonar_host=${VM_IP}" \
             -e "sonar_port=${{ env.SONAR_PORT }}" \
-            -e "new_admin_password=${{ secrets.NEW_ADMIN_PASSWORD }}" \
+            -e "new_admin_password=${NEW_ADMIN_PASSWORD}" \
             configure-sonarqube.yml \
             --connection=local
 
