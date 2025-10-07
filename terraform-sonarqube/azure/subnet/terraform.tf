@@ -5,7 +5,7 @@ resource "azurerm_subnet" "sq_snet" {
   address_prefixes     = ["11.0.1.0/24"]
 }
 resource "azurerm_network_security_group" "nsg" {
-  name     = "nsg"
+  name     = "${var.resource_prefix}-nsg"
   location = var.resource_group_location
 
   resource_group_name = var.resource_group_name
