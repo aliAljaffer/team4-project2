@@ -11,7 +11,7 @@ COPY . .
 
 RUN npm run build
 
-RUN npm run test
+RUN npx vitest run
 
 FROM nginx:alpine
 
