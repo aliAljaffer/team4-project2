@@ -1,0 +1,95 @@
+---
+- name: Configure SonarQube
+  hosts: localhost
+  gather_facts: false
+  vars:
+    sonar_url: "http://{{ sonar_host }}:{{ sonar_port }}"
+    default_user: admin
+    default_password: admin
+    token_name: "ci-token-{{ ansible_date_time.epoch }}"
+
+  tasks:
+    - name: Wait for SonarQube to be ready
+      uri:
+        url: "{{ sonar_url }}/api/system/status"
+        method: GET
+        user: "{{ default_user }}"
+        password: "{{ default_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: sonar_status
+      until: sonar_status.json.status == "UP"
+      retries: 30
+      delay: 10
+
+    - name: Change default admin password
+      uri:
+        url: "{{ sonar_url }}/api/users/change_password"
+        method: POST
+        user: "{{ default_user }}"
+        password: "{{ default_password }}"
+        force_basic_auth: yes
+        body_format: form-urlencoded
+        body:
+          login: "{{ default_user }}"
+          previousPassword: "{{ default_password }}"
+          password: "{{ new_admin_password }}"
+        status_code: [200, 204]
+      register: password_change
+      failed_when: false
+
+    - name: Check if password was already changed
+      uri:
+        url: "{{ sonar_url }}/api/authentication/validate"
+        method: GET
+        user: "{{ default_user }}"
+        password: "{{ new_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: auth_check
+      when: password_change.status not in [200, 204]
+
+    - name: Generate SonarQube token
+      uri:
+        url: "{{ sonar_url }}/api/user_tokens/generate"
+        method: POST
+        user: "{{ default_user }}"
+        password: "{{ new_admin_password }}"
+        force_basic_auth: yes
+        body_format: form-urlencoded
+        body:
+          name: "{{ token_name }}"
+        status_code: 200
+      register: token_response
+      no_log: true
+
+    - name: Set token fact
+      set_fact:
+        sonar_token: "{{ token_response.json.token }}"
+      no_log: true
+
+    - name: Verify token works
+      uri:
+        url: "{{ sonar_url }}/api/authentication/validate"
+        method: GET
+        user: "{{ sonar_token }}"
+        password: ""
+        force_basic_auth: yes
+        status_code: 200
+      register: token_validation
+
+    - name: Fail if token is invalid
+      fail:
+        msg: "Token validation failed"
+      when: token_validation.json.valid != true
+
+    - name: Save token to file (for GitHub Actions output)
+      copy:
+        content: "{{ sonar_token }}"
+        dest: /tmp/sonar_token
+        mode: "0600"
+      no_log: true
+
+    - name: Display success message
+      debug:
+        msg: "SonarQube configured successfully at {{ sonar_url }}"
