@@ -120,7 +120,7 @@ resource "azurerm_application_gateway" "appGW" {
     name                = local.backend_probe_name
     protocol            = "Http"
     host                = "localhost"
-    path                = "/api/health"
+    path                = "/health"
     interval            = 30
     timeout             = 30
     unhealthy_threshold = 3
