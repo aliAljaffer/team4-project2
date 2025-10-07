@@ -6,7 +6,7 @@
     sonar_url: "http://{{ sonar_host }}:{{ sonar_port }}"
     default_user: admin
     default_password: admin
-    token_name: "ci-token-{{ ansible_date_time.epoch }}"
+    token_name: "ci-token-{{ lookup('pipe', 'date +%s') }}"
 
   tasks:
     - name: Wait for SonarQube to be ready
