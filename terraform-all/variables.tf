@@ -127,3 +127,8 @@ variable "db_driver" {
   type = string
 
 }
+variable "admin_email" {
+  description = "Email for alert notifications"
+  type        = string
+  default     = "your-email@example.com"
+}

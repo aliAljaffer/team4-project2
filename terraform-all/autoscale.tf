@@ -13,7 +13,7 @@ variable "autoscale_cpu_threshold_low" {
 # Locals
 # ------------------
 locals {
-  autoscale_notification_email = "team4@project2.com"  
+  autoscale_notification_email = var.admin_email
 }
 
 # Resources
@@ -35,7 +35,7 @@ resource "azurerm_monitor_autoscale_setting" "fe_autoscale" {
       maximum = 3
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
@@ -56,7 +56,7 @@ resource "azurerm_monitor_autoscale_setting" "fe_autoscale" {
       }
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
@@ -77,7 +77,7 @@ resource "azurerm_monitor_autoscale_setting" "fe_autoscale" {
       }
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "MemoryPercentage"
@@ -130,7 +130,7 @@ resource "azurerm_monitor_autoscale_setting" "be_autoscale" {
       maximum = 3
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
@@ -151,7 +151,7 @@ resource "azurerm_monitor_autoscale_setting" "be_autoscale" {
       }
     }
 
-   
+
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
@@ -172,7 +172,7 @@ resource "azurerm_monitor_autoscale_setting" "be_autoscale" {
       }
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "MemoryPercentage"
@@ -193,7 +193,7 @@ resource "azurerm_monitor_autoscale_setting" "be_autoscale" {
       }
     }
 
-    
+
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"

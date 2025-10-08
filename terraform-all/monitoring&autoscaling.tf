@@ -1,10 +1,6 @@
 # Variables
 
-variable "admin_email" {
-  description = "Email for alert notifications"
-  type        = string
-  default     = "your-email@example.com"
-}
+
 
 # ------------------
 
@@ -17,17 +13,17 @@ variable "admin_email" {
 # Log Analytics
 resource "azurerm_log_analytics_workspace" "log_analytics" {
   name                = "${var.resource_prefix}-log-analytics"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.main_rg.location
+  resource_group_name = azurerm_resource_group.main_rg.name
   sku                 = "PerGB2018"
-  
+
 }
 
 # Application Insights (shared for both fe and be)
 resource "azurerm_application_insights" "insights" {
   name                = "${var.resource_prefix}-insights"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.main_rg.location
+  resource_group_name = azurerm_resource_group.main_rg.name
   application_type    = "web"
   workspace_id        = azurerm_log_analytics_workspace.log_analytics.id
   retention_in_days   = 30
@@ -78,7 +74,7 @@ resource "azurerm_monitor_diagnostic_setting" "backend_diag" {
 # Action Group for Alerts
 resource "azurerm_monitor_action_group" "action_group" {
   name                = "${var.resource_prefix}-action-group"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.main_rg.name
   short_name          = "alerts"
   enabled             = true
 
@@ -91,7 +87,7 @@ resource "azurerm_monitor_action_group" "action_group" {
 # Alert 1: App Gateway Backend Health <100% for 5 min
 resource "azurerm_monitor_metric_alert" "appgw_health" {
   name                = "${var.resource_prefix}-appgw-health-alert"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.main_rg.name
   scopes              = [azurerm_application_gateway.appGW.id]
   description         = "App Gateway Backend Health <100% for 5 min"
   severity            = 3
@@ -113,7 +109,7 @@ resource "azurerm_monitor_metric_alert" "appgw_health" {
 # Alert 2: frontend Web App CPU >70% for 5 min
 resource "azurerm_monitor_metric_alert" "frontend_cpu" {
   name                = "${var.resource_prefix}-frontend-cpu-alert"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.main_rg.name
   scopes              = [azurerm_service_plan.app_service_plan_frontend.id]
   description         = "Frontend Web App CPU >70% for 5 min"
   severity            = 3
@@ -135,7 +131,7 @@ resource "azurerm_monitor_metric_alert" "frontend_cpu" {
 # Alert 2 : Backend Web App CPU >70% for 5 min
 resource "azurerm_monitor_metric_alert" "backend_cpu" {
   name                = "${var.resource_prefix}-backend-cpu-alert"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.main_rg.name
   scopes              = [azurerm_service_plan.app_service_plan_backend.id]
   description         = "Backend Web App CPU >70% for 5 min"
   severity            = 3
@@ -157,7 +153,7 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 # Alert 3: SQL DTU Utilization >80%
 resource "azurerm_monitor_metric_alert" "sql_dtu" {
   name                = "${var.resource_prefix}-sql-dtu-alert"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.main_rg.name
   scopes              = [azurerm_sql_database.sql_database.id]
   description         = "SQL DTU Utilization >80%"
   severity            = 3
@@ -176,131 +172,131 @@ resource "azurerm_monitor_metric_alert" "sql_dtu" {
   }
 }
 
-# Autoscaling for Frontend App Service Plan
-resource "azurerm_monitor_autoscale_setting" "asp_autoscale_frontend" {
-  name                = "${var.resource_prefix}-autoscale-frontend"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  target_resource_id  = azurerm_service_plan.app_service_plan_frontend.id
-  enabled             = true
+# # Autoscaling for Frontend App Service Plan
+# resource "azurerm_monitor_autoscale_setting" "asp_autoscale_frontend" {
+#   name                = "${var.resource_prefix}-autoscale-frontend"
+#   resource_group_name = azurerm_resource_group.main_rg.name
+#   location            = var.location
+#   target_resource_id  = azurerm_service_plan.app_service_plan_frontend.id
+#   enabled             = true
 
-  profile {
-    name = "defaultProfile"
+#   profile {
+#     name = "defaultProfile"
 
-    capacity {
-      default = 1
-      minimum = 1
-      maximum = 4
-    }
+#     capacity {
+#       default = 1
+#       minimum = 1
+#       maximum = 4
+#     }
 
-    rule {
-      metric_trigger {
-        metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.app_service_plan_frontend.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_aggregation   = "Average"
-        time_window        = "PT10M"
-        threshold          = 60
-        operator           = "GreaterThan"
-      }
-      scale_action {
-        direction = "Increase"
-        type      = "ChangeCount"
-        value     = 1
-        cooldown  = "PT5M"
-      }
-    }
+#     rule {
+#       metric_trigger {
+#         metric_name        = "CpuPercentage"
+#         metric_resource_id = azurerm_service_plan.app_service_plan_frontend.id
+#         time_grain         = "PT1M"
+#         statistic          = "Average"
+#         time_aggregation   = "Average"
+#         time_window        = "PT10M"
+#         threshold          = 60
+#         operator           = "GreaterThan"
+#       }
+#       scale_action {
+#         direction = "Increase"
+#         type      = "ChangeCount"
+#         value     = 1
+#         cooldown  = "PT5M"
+#       }
+#     }
 
-    rule {
-      metric_trigger {
-        metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.app_service_plan_frontend.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_aggregation   = "Average"
-        time_window        = "PT10M"
-        threshold          = 20
-        operator           = "LessThan"
-      }
-      scale_action {
-        direction = "Decrease"
-        type      = "ChangeCount"
-        value     = 1
-        cooldown  = "PT5M"
-      }
-    }
-  }
+#     rule {
+#       metric_trigger {
+#         metric_name        = "CpuPercentage"
+#         metric_resource_id = azurerm_service_plan.app_service_plan_frontend.id
+#         time_grain         = "PT1M"
+#         statistic          = "Average"
+#         time_aggregation   = "Average"
+#         time_window        = "PT10M"
+#         threshold          = 20
+#         operator           = "LessThan"
+#       }
+#       scale_action {
+#         direction = "Decrease"
+#         type      = "ChangeCount"
+#         value     = 1
+#         cooldown  = "PT5M"
+#       }
+#     }
+#   }
 
-  notification {
-    email {
-      custom_emails                  = [var.admin_email]
-    }
-  }
-}
+#   notification {
+#     email {
+#       custom_emails = [var.admin_email]
+#     }
+#   }
+# }
 
-# Autoscaling for Backend App Service Plan
-resource "azurerm_monitor_autoscale_setting" "asp_autoscale_backend" {
-  name                = "${var.resource_prefix}-autoscale-backend"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  target_resource_id  = azurerm_service_plan.app_service_plan_backend.id
-  enabled             = true
+# # Autoscaling for Backend App Service Plan
+# resource "azurerm_monitor_autoscale_setting" "asp_autoscale_backend" {
+#   name                = "${var.resource_prefix}-autoscale-backend"
+#   resource_group_name = azurerm_resource_group.main_rg.name
+#   location            = var.location
+#   target_resource_id  = azurerm_service_plan.app_service_plan_backend.id
+#   enabled             = true
 
-  profile {
-    name = "defaultProfile"
+#   profile {
+#     name = "defaultProfile"
 
-    capacity {
-      default = 1
-      minimum = 1
-      maximum = 4
-    }
+#     capacity {
+#       default = 1
+#       minimum = 1
+#       maximum = 4
+#     }
 
-    rule {
-      metric_trigger {
-        metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.app_service_plan_backend.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_aggregation   = "Average"
-        time_window        = "PT10M"
-        threshold          = 60
-        operator           = "GreaterThan"
-      }
-      scale_action {
-        direction = "Increase"
-        type      = "ChangeCount"
-        value     = 1
-        cooldown  = "PT5M"
-      }
-    }
+#     rule {
+#       metric_trigger {
+#         metric_name        = "CpuPercentage"
+#         metric_resource_id = azurerm_service_plan.app_service_plan_backend.id
+#         time_grain         = "PT1M"
+#         statistic          = "Average"
+#         time_aggregation   = "Average"
+#         time_window        = "PT10M"
+#         threshold          = 60
+#         operator           = "GreaterThan"
+#       }
+#       scale_action {
+#         direction = "Increase"
+#         type      = "ChangeCount"
+#         value     = 1
+#         cooldown  = "PT5M"
+#       }
+#     }
 
-    rule {
-      metric_trigger {
-        metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.app_service_plan_backend.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_aggregation   = "Average"
-        time_window        = "PT10M"
-        threshold          = 20
-        operator           = "LessThan"
-      }
-      scale_action {
-        direction = "Decrease"
-        type      = "ChangeCount"
-        value     = 1
-        cooldown  = "PT5M"
-      }
-    }
-  }
+#     rule {
+#       metric_trigger {
+#         metric_name        = "CpuPercentage"
+#         metric_resource_id = azurerm_service_plan.app_service_plan_backend.id
+#         time_grain         = "PT1M"
+#         statistic          = "Average"
+#         time_aggregation   = "Average"
+#         time_window        = "PT10M"
+#         threshold          = 20
+#         operator           = "LessThan"
+#       }
+#       scale_action {
+#         direction = "Decrease"
+#         type      = "ChangeCount"
+#         value     = 1
+#         cooldown  = "PT5M"
+#       }
+#     }
+#   }
 
-  notification {
-    email {
-        custom_emails                         = [var.admin_email]
-    }
-  }
-}
+#   notification {
+#     email {
+#       custom_emails = [var.admin_email]
+#     }
+#   }
+# }
 # -----------------
 
 # Outputs
