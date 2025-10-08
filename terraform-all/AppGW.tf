@@ -72,10 +72,10 @@ resource "azurerm_application_gateway" "appGW" {
     name = local.frontend_port_name
     port = 80
   }
-  frontend_port {
-    name = "${var.resource_prefix}-https-port"
-    port = 443
-  }
+  # frontend_port {
+  #   name = "${var.resource_prefix}-https-port"
+  #   port = 443
+  # }
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
     public_ip_address_id = azurerm_public_ip.appGW_public_ip.id
@@ -95,6 +95,7 @@ resource "azurerm_application_gateway" "appGW" {
     protocol              = "Https"
     request_timeout       = 30
     probe_name            = local.frontend_probe_name
+    host_name             = azurerm_linux_web_app.frontend_app.default_hostname
   }
   backend_http_settings {
     name                  = "${local.http_setting_name}-backend"
@@ -103,6 +104,7 @@ resource "azurerm_application_gateway" "appGW" {
     protocol              = "Https"
     request_timeout       = 30
     probe_name            = local.backend_probe_name
+    host_name             = azurerm_linux_web_app.backend_app.default_hostname
   }
   probe {
     name                = local.frontend_probe_name
