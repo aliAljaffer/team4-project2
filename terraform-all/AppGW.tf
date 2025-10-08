@@ -10,7 +10,7 @@ variable "app_gateway_tier" {
 
   description = "The tier of the Application Gateway."
   type        = string
-  default     = "WAF v2"
+  default     = "WAF_v2"
 
 }
 variable "app_gateway_capacity" {
@@ -137,6 +137,7 @@ resource "azurerm_application_gateway" "appGW" {
   request_routing_rule {
     name                       = "${local.frontend_path_rule_name}-http-rule"
     rule_type                  = "PathBasedRouting"
+    priority                   = 100
     http_listener_name         = "${local.listener_name}-http"
     backend_address_pool_name  = "${local.backend_address_pool_name}-frontend"
     backend_http_settings_name = "${local.http_setting_name}-frontend"
@@ -147,9 +148,10 @@ resource "azurerm_application_gateway" "appGW" {
     default_backend_address_pool_name  = "${local.backend_address_pool_name}-frontend"
     default_backend_http_settings_name = "${local.http_setting_name}-frontend"
     path_rule {
-      name                       = "${local.frontend_path_rule_name}-backend-api"
-      paths                      = ["/api/*"]
-      backend_address_pool_name  = "${local.backend_address_pool_name}-backend"
+      name                      = "${local.frontend_path_rule_name}-backend-api"
+      paths                     = ["/api/*", "/health"]
+      backend_address_pool_name = "${local.backend_address_pool_name}-backend"
+
       backend_http_settings_name = "${local.http_setting_name}-backend"
     }
     path_rule {

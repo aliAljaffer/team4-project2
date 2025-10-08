@@ -96,7 +96,7 @@ resource "azurerm_monitor_metric_alert" "appgw_health" {
   criteria {
     metric_namespace = "Microsoft.Network/applicationGateways"
     metric_name      = "BackendResponseStatus"
-    aggregation      = "Average"
+    aggregation      = "Total"
     operator         = "LessThan"
     threshold        = 100
   }
@@ -151,26 +151,26 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 }
 
 # Alert 3: SQL DTU Utilization >80%
-resource "azurerm_monitor_metric_alert" "sql_dtu" {
-  name                = "${var.resource_prefix}-sql-dtu-alert"
-  resource_group_name = azurerm_resource_group.main_rg.name
-  scopes              = [azurerm_mssql_database.sql_database.id]
-  description         = "SQL DTU Utilization >80%"
-  severity            = 3
-  frequency           = "PT5M"
+# resource "azurerm_monitor_metric_alert" "sql_dtu" {
+#   name                = "${var.resource_prefix}-sql-dtu-alert"
+#   resource_group_name = azurerm_resource_group.main_rg.name
+#   scopes              = [azurerm_mssql_database.sql_database.id]
+#   description         = "SQL DTU Utilization >80%"
+#   severity            = 3
+#   frequency           = "PT5M"
 
-  criteria {
-    metric_namespace = "Microsoft.Sql/servers/databases"
-    metric_name      = "dtu_consumption_percent"
-    aggregation      = "Average"
-    operator         = "GreaterThan"
-    threshold        = 80
-  }
+#   criteria {
+#     metric_namespace = "Microsoft.Sql/servers/databases"
+#     metric_name      = "dtu_consumption_percent"
+#     aggregation      = "Average"
+#     operator         = "GreaterThan"
+#     threshold        = 80
+#   }
 
-  action {
-    action_group_id = azurerm_monitor_action_group.action_group.id
-  }
-}
+#   action {
+#     action_group_id = azurerm_monitor_action_group.action_group.id
+#   }
+# }
 
 # # Autoscaling for Frontend App Service Plan
 # resource "azurerm_monitor_autoscale_setting" "asp_autoscale_frontend" {
@@ -301,9 +301,9 @@ resource "azurerm_monitor_metric_alert" "sql_dtu" {
 
 # Outputs
 
-output "instrumentation_key" {
-  value = azurerm_application_insights.insights.instrumentation_key
-}
+# output "instrumentation_key" {
+#   value = azurerm_application_insights.insights.instrumentation_key
+# }
 
 output "app_id" {
   value = azurerm_application_insights.insights.app_id
