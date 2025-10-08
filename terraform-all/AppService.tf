@@ -32,7 +32,7 @@ locals {
 # Resources
 
 resource "azurerm_linux_web_app" "frontend_app" {
-  name                      = "${local.frontend_app_name}-frontend"
+  name                      = local.frontend_app_name
   resource_group_name       = azurerm_resource_group.main_rg.name
   location                  = azurerm_resource_group.main_rg.location
   service_plan_id           = azurerm_service_plan.fe_plan.id
@@ -67,7 +67,7 @@ resource "azurerm_service_plan" "fe_plan" {
 }
 
 resource "azurerm_linux_web_app" "backend_app" {
-  name                      = "${local.backend_app_name}-backend"
+  name                      = local.backend_app_name
   resource_group_name       = azurerm_resource_group.main_rg.name
   location                  = azurerm_resource_group.main_rg.location
   service_plan_id           = azurerm_service_plan.be_plan.id
@@ -90,7 +90,8 @@ resource "azurerm_linux_web_app" "backend_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.insights.instrumentation_key
     #"APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.insights.connection_string
     # Azure SQL Database (Production)
-    DB_HOST                     = azurerm_mssql_server.sql_server.fully_qualified_domain_name
+    DB_HOST = azurerm_mssql_server.sql_server.fully_qualified_domain_name
+
     DB_PORT                     = var.db_port
     DB_NAME                     = azurerm_mssql_database.sql_database.name
     DB_USERNAME                 = azurerm_mssql_server.sql_server.administrator_login
@@ -116,9 +117,10 @@ resource "azurerm_linux_web_app" "backend_app" {
 
     # ---------- ENV FROM PROJECT 1
     # Server Configuration
-    PORT     = 3001
-    NODE_ENV = "development"
-
+    PORT      = 3001
+    NODE_ENV  = "development"
+    DB_SERVER = azurerm_mssql_server.sql_server.fully_qualified_domain_name
+    DB_USER   = azurerm_mssql_server.sql_server.administrator_login
     # JWT Configuration
     JWT_SECRET     = "your-super-secret-jwt-key-here"
     JWT_EXPIRES_IN = "7d"
