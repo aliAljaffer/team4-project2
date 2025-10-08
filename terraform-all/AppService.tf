@@ -42,7 +42,7 @@ resource "azurerm_linux_web_app" "frontend_app" {
 
     always_on = true
     application_stack {
-      docker_image_name   = "${local.dockerhub_username}/ecommerce-frontend:latest"
+      docker_image_name   = "${local.dockerhub_username}/fe-team4-project2:latest"
       docker_registry_url = "https://index.docker.io"
     }
     health_check_path                 = "/"
@@ -79,7 +79,7 @@ resource "azurerm_linux_web_app" "backend_app" {
     #   allowed_origins = ["https://${local.app_gateway_ip}"]
     # }
     application_stack {
-      docker_image_name   = "${local.dockerhub_username}/ecommerce-backend:latest"
+      docker_image_name   = "${local.dockerhub_username}/be-team4-project2:latest"
       docker_registry_url = "https://index.docker.io"
     }
     health_check_path                 = "/health"
