@@ -2,14 +2,10 @@ variable "subscription_id" {
   type = string
 }
 
-variable "resource_prefix" {
-  type    = string
-  default = "team4-project2"
-}
 
 variable "rg_name" {
-  type    = string
-  default = "${var.resource_prefix}-rg"
+  type = string
+
 }
 
 variable "location" {
@@ -17,16 +13,17 @@ variable "location" {
   default = "ukwest"
 }
 variable "virtual_machine_name" {
-  type = string
+  type    = string
+  default = "test-vm"
 }
 
-variable "disksize" {
+variable "vm_size" {
   type    = string
   default = "Standard_DS1_v2"
 }
 variable "os_disk_name" {
-
-  type = string
+  type    = string
+  default = "my-test-disk"
 }
 variable "os_disk_caching" {
 
@@ -71,32 +68,20 @@ variable "vm_admin_username" {
 
   type = string
 
-  default = "azureuser"
+  default = "team4"
 }
 
 variable "vm_disable_password_authentication" {
-
-  type = bool
-
+  type    = bool
   default = false
 }
 variable "vm_admin_password" {
   type = string
 }
-variable "fe_sunet_id" {
-  type = string
 
-}
 
-variable "be_sunet_id" {
-  type = string
 
-}
 
-variable "app_gw_ip" {
-  type = string
-
-}
 
 variable "db_host" {
   type = string
@@ -109,8 +94,8 @@ variable "db_name" {
 }
 
 variable "db_port" {
-  type = string
-
+  type    = string
+  default = "1433"
 }
 
 variable "db_username" {
@@ -124,8 +109,8 @@ variable "db_password" {
 }
 
 variable "db_driver" {
-  type = string
-
+  type    = string
+  default = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 }
 variable "admin_email" {
   description = "Email for alert notifications"

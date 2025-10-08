@@ -110,7 +110,7 @@ resource "azurerm_monitor_metric_alert" "appgw_health" {
 resource "azurerm_monitor_metric_alert" "frontend_cpu" {
   name                = "${var.resource_prefix}-frontend-cpu-alert"
   resource_group_name = azurerm_resource_group.main_rg.name
-  scopes              = [azurerm_service_plan.app_service_plan_frontend.id]
+  scopes              = [azurerm_service_plan.fe_plan.id]
   description         = "Frontend Web App CPU >70% for 5 min"
   severity            = 3
   frequency           = "PT5M"
@@ -132,7 +132,7 @@ resource "azurerm_monitor_metric_alert" "frontend_cpu" {
 resource "azurerm_monitor_metric_alert" "backend_cpu" {
   name                = "${var.resource_prefix}-backend-cpu-alert"
   resource_group_name = azurerm_resource_group.main_rg.name
-  scopes              = [azurerm_service_plan.app_service_plan_backend.id]
+  scopes              = [azurerm_service_plan.be_plan.id]
   description         = "Backend Web App CPU >70% for 5 min"
   severity            = 3
   frequency           = "PT5M"
@@ -154,7 +154,7 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 resource "azurerm_monitor_metric_alert" "sql_dtu" {
   name                = "${var.resource_prefix}-sql-dtu-alert"
   resource_group_name = azurerm_resource_group.main_rg.name
-  scopes              = [azurerm_sql_database.sql_database.id]
+  scopes              = [azurerm_mssql_database.sql_database.id]
   description         = "SQL DTU Utilization >80%"
   severity            = 3
   frequency           = "PT5M"
