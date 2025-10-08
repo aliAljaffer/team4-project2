@@ -38,10 +38,10 @@ locals {
 # Resources
 # -----------------
 
-resource "azurerm_sql_server" "sql_server" {
+resource "azurerm_mssql_server" "sql_server" {
   name                         = local.sql_server_name
-  resource_group_name          = azurerm_resource_group.main_rg.name
   location                     = azurerm_resource_group.main_rg.location
+  resource_group_name          = azurerm_resource_group.main_rg.name
   version                      = var.sql_server_version
   administrator_login          = var.sql_admin_username
   administrator_login_password = var.sql_admin_password
@@ -56,7 +56,7 @@ resource "azurerm_sql_server" "sql_server" {
 
 resource "azurerm_mssql_database" "sql_database" {
   name        = var.sql_database_name
-  server_id   = azurerm_sql_server.sql_server.id
+  server_id   = azurerm_mssql_server.sql_server.id
   collation   = "SQL_Latin1_General_CP1_CI_AS"
   sku_name    = "GP_Gen5_2"
   max_size_gb = 30
@@ -85,7 +85,7 @@ resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${var.resource_prefix}-sql-private-endpoint"
   resource_group_name = azurerm_resource_group.main_rg.name
   location            = azurerm_resource_group.main_rg.location
-  subnet_id           = var.db_subnet.id
+  subnet_id           = azurerm_subnet.db_subnet.id
 
 
   private_dns_zone_group {
@@ -94,7 +94,7 @@ resource "azurerm_private_endpoint" "sql_private_endpoint" {
   }
   private_service_connection {
     name                           = "${var.resource_prefix}-sql-privatesc"
-    private_connection_resource_id = azurerm_sql_server.sql_server.id
+    private_connection_resource_id = azurerm_mssql_server.sql_server.id
     is_manual_connection           = false
     subresource_names              = ["sqlServer"]
   }
@@ -118,10 +118,10 @@ resource "azurerm_network_security_group" "sql_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "1433"
-    source_address_prefix      = azurerm_virtual_network.main_vnet.address_space[0]
+    source_address_prefix      = one(azurerm_virtual_network.main_vnet.address_space)
     destination_address_prefix = "*"
   }
-  security_rule = {
+  security_rule {
     name                       = "DenyAllInbound"
     priority                   = 4096
     direction                  = "Inbound"
@@ -139,9 +139,9 @@ resource "azurerm_network_security_group" "sql_nsg" {
   }
 
 }
-resource "azurerm_network_security_group_association" "sql_nsg_association" {
+resource "azurerm_subnet_network_security_group_association" "sql_nsg_association" {
   network_security_group_id = azurerm_network_security_group.sql_nsg.id
-  subnet_id                 = var.db_subnet.id
+  subnet_id                 = azurerm_subnet.db_subnet.id
 
 }
 
@@ -153,7 +153,7 @@ resource "azurerm_network_security_group_association" "sql_nsg_association" {
 output "sql_server_name" {
   description = "The name of the SQL server"
   sensitive   = false
-  value       = azurerm_sql_server.sql_server.name
+  value       = azurerm_mssql_server.sql_server.name
 }
 output "sql_database_name" {
   description = "The name of the SQL database"
@@ -164,5 +164,5 @@ output "sql_database_name" {
 output "sql_server_fqdn" {
   description = "The fully qualified domain name of the SQL server"
   sensitive   = false
-  value       = azurerm_sql_server.sql_server.fully_qualified_domain_name
+  value       = azurerm_mssql_server.sql_server.fully_qualified_domain_name
 }

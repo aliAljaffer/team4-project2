@@ -11,7 +11,7 @@ resource "azurerm_linux_virtual_machine" "virtual_machine" {
   location              = var.location
   resource_group_name   = azurerm_resource_group.main_rg.name
   network_interface_ids = [azurerm_network_interface.network_interface_card.id]
-  size                  = var.disksize
+  size                  = var.vm_size
 
   os_disk {
     name                 = var.os_disk_name
