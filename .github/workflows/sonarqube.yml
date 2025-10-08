@@ -1,8 +1,7 @@
 name: Provision & Setup SonarQube with Ansible
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 env:
   TF_WORKING_DIR: ./terraform-sonarqube
@@ -11,6 +10,11 @@ env:
 jobs:
   provision_and_configure:
     runs-on: ubuntu-latest
+    outputs:
+      vm_ip: ${{ steps.get_vm_ip.outputs.vm_ip }}
+      sonar_token: ${{ steps.get_token.outputs.sonar_token }}
+      sonar_url: ${{steps.get_sonar_url.outputs.url}}
+
     env:
       TF_VAR_subscription_id: ${{secrets.subscription_id}}
       TF_VAR_admin_password: ${{secrets.admin_password}}
@@ -77,8 +81,7 @@ jobs:
           echo "sonar_token=$SONAR_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Display Outputs
+        id: get_sonar_url
         run: |
           echo "url=http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}" >> $GITHUB_OUTPUT
-          echo "SonarQube URL: http://${{ steps.get_vm_ip.outputs.vm_ip }}:${{ env.SONAR_PORT }}"
-          echo "Token: ${{ steps.get_token.outputs.sonar_token }}"
           echo "Configuration completed successfully"
