@@ -53,6 +53,9 @@ resource "azurerm_linux_web_app" "frontend_app" {
   
   app_settings = {
     REACT_APP_API_URL = "https://${app_gw_ip}/api"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"     = azurerm_application_insights.insights.instrumentation_key
+    #"APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.insights.connection_string
   }
 }
 
@@ -86,6 +89,8 @@ resource "azurerm_linux_web_app" "backend_app" {
   }
   
   app_settings = { 
+    "APPINSIGHTS_INSTRUMENTATIONKEY"     = azurerm_application_insights.insights.instrumentation_key
+    #"APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.insights.connection_string
     # Azure SQL Database (Production)
     DB_HOST= var.db_host
     DB_PORT= var.db_port
