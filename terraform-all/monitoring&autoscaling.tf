@@ -23,7 +23,7 @@ resource "azurerm_log_analytics_workspace" "log_analytics" {
   
 }
 
-# Application Insights (shared for both apps)
+# Application Insights (shared for both fe and be)
 resource "azurerm_application_insights" "insights" {
   name                = "${var.resource_prefix}-insights"
   location            = azurerm_resource_group.rg.location
@@ -80,6 +80,7 @@ resource "azurerm_monitor_action_group" "action_group" {
   name                = "${var.resource_prefix}-action-group"
   resource_group_name = azurerm_resource_group.rg.name
   short_name          = "alerts"
+  enabled             = true
 
   email_receiver {
     name          = "email"
@@ -91,7 +92,7 @@ resource "azurerm_monitor_action_group" "action_group" {
 resource "azurerm_monitor_metric_alert" "appgw_health" {
   name                = "${var.resource_prefix}-appgw-health-alert"
   resource_group_name = azurerm_resource_group.rg.name
-  scopes              = ["/subscriptions/${var.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.Network/applicationGateways/${azurerm_application_gateway.appGW.name}"]
+  scopes              = [azurerm_application_gateway.appGW.id]
   description         = "App Gateway Backend Health <100% for 5 min"
   severity            = 3
   frequency           = "PT5M"
@@ -157,7 +158,7 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 resource "azurerm_monitor_metric_alert" "sql_dtu" {
   name                = "${var.resource_prefix}-sql-dtu-alert"
   resource_group_name = azurerm_resource_group.rg.name
-  scopes              = ["/subscriptions/${var.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.Sql/servers/${azurerm_sql_server.sql_server.name}/databases/${azurerm_sql_database.sql_database.name}"]
+  scopes              = [azurerm_sql_database.sql_database.id]
   description         = "SQL DTU Utilization >80%"
   severity            = 3
   frequency           = "PT5M"
@@ -303,5 +304,14 @@ resource "azurerm_monitor_autoscale_setting" "asp_autoscale_backend" {
 # -----------------
 
 # Outputs
+
+output "instrumentation_key" {
+  value = azurerm_application_insights.insights.instrumentation_key
+}
+
+output "app_id" {
+  value = azurerm_application_insights.insights.app_id
+}
+
 # -----------------
 
