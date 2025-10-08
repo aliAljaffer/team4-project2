@@ -2,7 +2,6 @@
 # ------------------
 variable "sql_admin_username" {
   type        = string
-  default     = "blalalalalabalala"
   description = "the username for the SQL admin"
   sensitive   = true
 }
@@ -142,7 +141,6 @@ resource "azurerm_network_security_group" "sql_nsg" {
 resource "azurerm_subnet_network_security_group_association" "sql_nsg_association" {
   network_security_group_id = azurerm_network_security_group.sql_nsg.id
   subnet_id                 = azurerm_subnet.db_subnet.id
-
 }
 
 

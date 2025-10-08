@@ -1,11 +1,13 @@
 variable "subscription_id" {
-  type = string
+  type    = string
+  default = "baddefault"
 }
 
 
 variable "rg_name" {
   type = string
 
+  default = "baddefault"
 }
 
 variable "location" {
@@ -19,7 +21,7 @@ variable "virtual_machine_name" {
 
 variable "vm_size" {
   type    = string
-  default = "Standard_DS1_v2"
+  default = "Standard_D2s_v3"
 }
 variable "os_disk_name" {
   type    = string
@@ -48,14 +50,14 @@ variable "source_image_reference_offer" {
 
   type = string
 
-  default = "UbuntuServer"
+  default = "0001-com-ubuntu-server-jammy"
 }
 
 variable "source_image_reference_sku" {
 
   type = string
 
-  default = "22.04-LTS"
+  default = "22_04-lts-gen2"
 }
 
 variable "source_image_reference_version" {
@@ -76,7 +78,8 @@ variable "vm_disable_password_authentication" {
   default = false
 }
 variable "vm_admin_password" {
-  type = string
+  type    = string
+  default = "baddefault"
 }
 
 
@@ -86,11 +89,13 @@ variable "vm_admin_password" {
 variable "db_host" {
   type = string
 
+  default = "baddefault"
 }
 
 variable "db_name" {
   type = string
 
+  default = "baddefault"
 }
 
 variable "db_port" {
@@ -101,11 +106,13 @@ variable "db_port" {
 variable "db_username" {
   type = string
 
+  default = "baddefault"
 }
 
 variable "db_password" {
   type = string
 
+  default = "baddefault"
 }
 
 variable "db_driver" {

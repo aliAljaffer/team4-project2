@@ -41,7 +41,7 @@ resource "azurerm_network_interface" "network_interface_card" {
 
   ip_configuration {
     name                          = "configuration"
-    subnet_id                     = azurerm_subnet.frontend_subnet.id
+    subnet_id                     = azurerm_subnet.vm_subnet.id
     private_ip_address_allocation = "Dynamic"
   }
 }

@@ -75,9 +75,9 @@ resource "azurerm_linux_web_app" "backend_app" {
 
   site_config {
     always_on = true
-    cors {
-      allowed_origins = ["https://${local.app_gateway_ip}"]
-    }
+    # cors {
+    #   allowed_origins = ["https://${local.app_gateway_ip}"]
+    # }
     application_stack {
       docker_image_name   = "${local.dockerhub_username}/ecommerce-backend:latest"
       docker_registry_url = "https://index.docker.io"
@@ -114,6 +114,17 @@ resource "azurerm_linux_web_app" "backend_app" {
     RATE_LIMIT_MAX_REQUESTS = 100
 
 
+    # ---------- ENV FROM PROJECT 1
+    # Server Configuration
+    PORT     = 3001
+    NODE_ENV = "development"
+
+    # JWT Configuration
+    JWT_SECRET     = "your-super-secret-jwt-key-here"
+    JWT_EXPIRES_IN = "7d"
+
+    # CORS Configuration
+    CORS_ORIGIN = "https://${local.app_gateway_ip}"
 
   }
 }
