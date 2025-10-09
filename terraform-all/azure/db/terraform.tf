@@ -1,46 +1,7 @@
-# Variables
-# ------------------
-variable "sql_admin_username" {
-  type        = string
-  description = "the username for the SQL admin"
-  sensitive   = true
-}
-variable "sql_admin_password" {
-  type        = string
-  description = "the password for the SQL admin"
-  sensitive   = true
-}
-
-variable "sql_database_name" {
-  type        = string
-  default     = "project2db"
-  description = "the name of the database"
-}
-
-variable "sql_server_version" {
-  type        = string
-  default     = "12.0"
-  description = "the version of the SQL server"
-
-}
-
-
-# Locals
-# ------------------
-locals {
-  sql_server_name = "${var.resource_prefix}-sqlserver"
-}
-
-
-
-
-# Resources
-# -----------------
-
 resource "azurerm_mssql_server" "sql_server" {
   name                         = local.sql_server_name
-  location                     = azurerm_resource_group.main_rg.location
-  resource_group_name          = azurerm_resource_group.main_rg.name
+  location                     = var.rg_location
+  resource_group_name          = var.rg_name
   version                      = var.sql_server_version
   administrator_login          = var.sql_admin_username
   administrator_login_password = var.sql_admin_password
@@ -68,23 +29,23 @@ resource "azurerm_mssql_database" "sql_database" {
 
 resource "azurerm_private_dns_zone" "sql_private_dns" {
   name                = "privatelink.database.windows.net"
-  resource_group_name = azurerm_resource_group.main_rg.name
+  resource_group_name = var.rg_name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "sql_main_vnet" {
   name                  = "${var.resource_prefix}-sql-private-dns-link"
-  resource_group_name   = azurerm_resource_group.main_rg.name
+  resource_group_name   = var.rg_name
   private_dns_zone_name = azurerm_private_dns_zone.sql_private_dns.name
-  virtual_network_id    = azurerm_virtual_network.main_vnet.id
+  virtual_network_id    = var.vnet_id
   registration_enabled  = false
 
 }
 
 resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${var.resource_prefix}-sql-private-endpoint"
-  resource_group_name = azurerm_resource_group.main_rg.name
-  location            = azurerm_resource_group.main_rg.location
-  subnet_id           = azurerm_subnet.db_subnet.id
+  resource_group_name = var.rg_name
+  location            = var.rg_location
+  subnet_id           = var.db_subnet_id
 
 
   private_dns_zone_group {
@@ -106,8 +67,8 @@ resource "azurerm_private_endpoint" "sql_private_endpoint" {
 }
 resource "azurerm_network_security_group" "sql_nsg" {
   name                = "${var.resource_prefix}-sql-nsg"
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
 
   security_rule {
     name                       = "AllowSQL"
@@ -117,7 +78,7 @@ resource "azurerm_network_security_group" "sql_nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "1433"
-    source_address_prefix      = one(azurerm_virtual_network.main_vnet.address_space)
+    source_address_prefix      = one(var.vnet_address_space)
     destination_address_prefix = "*"
   }
   security_rule {
@@ -140,27 +101,5 @@ resource "azurerm_network_security_group" "sql_nsg" {
 }
 resource "azurerm_subnet_network_security_group_association" "sql_nsg_association" {
   network_security_group_id = azurerm_network_security_group.sql_nsg.id
-  subnet_id                 = azurerm_subnet.db_subnet.id
-}
-
-
-
-# Outputs
-# -----------------
-
-output "sql_server_name" {
-  description = "The name of the SQL server"
-  sensitive   = false
-  value       = azurerm_mssql_server.sql_server.name
-}
-output "sql_database_name" {
-  description = "The name of the SQL database"
-  sensitive   = false
-  value       = azurerm_mssql_database.sql_database.name
-
-}
-output "sql_server_fqdn" {
-  description = "The fully qualified domain name of the SQL server"
-  sensitive   = false
-  value       = azurerm_mssql_server.sql_server.fully_qualified_domain_name
+  subnet_id                 = var.db_subnet_id
 }
