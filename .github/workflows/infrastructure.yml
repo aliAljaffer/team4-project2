@@ -34,8 +34,5 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-
       - name: Terraform Apply using the plan from the previous step
-        run: terraform apply tfplan -auto-approve
+        run: terraform apply -auto-approve
