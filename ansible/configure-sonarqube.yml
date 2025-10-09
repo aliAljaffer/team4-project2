@@ -17,7 +17,7 @@
         force_basic_auth: yes
         status_code: 200
       register: sonar_status
-      until: sonar_status.json.status == "UP"
+      until: sonar_status is success and sonar_status.json.status == "UP"
       retries: 30
       delay: 12
 

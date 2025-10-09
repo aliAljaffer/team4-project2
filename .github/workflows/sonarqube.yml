@@ -57,6 +57,20 @@ jobs:
           VM_IP=$(terraform output -raw ip)
           echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
 
+      - name: Wait for SonarQube VM to be accessible
+        run: |
+          echo "Waiting for VM to be ready..."
+          for i in {1..30}; do
+            if timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ steps.get_vm_ip.outputs.vm_ip }}/22"; then
+              echo "VM is accessible"
+              exit 0
+            fi
+            echo "Attempt $i: VM not ready yet, waiting..."
+            sleep 10
+          done
+          echo "VM did not become accessible in time"
+          exit 1
+
       - name: Configure SonarQube with Ansible
         id: configure
         working-directory: ./ansible
@@ -66,12 +80,10 @@ jobs:
           NEW_ADMIN_PASSWORD: ${{ secrets.NEW_ADMIN_PASSWORD }}
         run: |
           ansible-playbook \
-            -i "${VM_IP}," \
             -e "sonar_host=${VM_IP}" \
             -e "sonar_port=${{ env.SONAR_PORT }}" \
             -e "new_admin_password=${NEW_ADMIN_PASSWORD}" \
-            configure-sonarqube.yml \
-            --connection=local
+            configure-sonarqube.yml
 
       - name: Extract SonarQube Token
         id: get_token
