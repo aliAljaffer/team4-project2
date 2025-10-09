@@ -4,9 +4,13 @@ variable "subscription_id" {
 
 variable "resource_prefix" {
   type    = string
-  default = "team4-project2-sonarqube"
+  default = "team4-p2-sqube"
 }
 variable "admin_password" {
+  type      = string
+  sensitive = true
+}
+variable "NEW_ADMIN_PASSWORD" {
   type      = string
   sensitive = true
 }

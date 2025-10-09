@@ -1,10 +1,8 @@
-#adding comment to merge
-# same, adding comment to run workflow!
-# same, adding comment to run workflow!
+# adding comment to merge
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 
 WORKDIR /app
-
+ENV SPRING_PROFILES_ACTIVE="azure"
 # Copy the pom.xml and download dependencies
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
@@ -26,7 +24,7 @@ EXPOSE 8080
 
 # Health check for Azure Web App and Docker
 HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:8080/api/health || exit 1
 
 # Run the JAR with environment variables injected at runtime
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

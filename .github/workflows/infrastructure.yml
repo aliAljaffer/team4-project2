@@ -2,6 +2,17 @@ name: Infrastructure Provisioning
 
 on:
   workflow_call:
+    inputs:
+      be_image_tag:
+        description: "backend image tag"
+        type: string
+        required: true
+        default: "latest"
+      fe_image_tag:
+        description: "frontend image tag"
+        type: string
+        required: true
+        default: "latest"
 
 jobs:
   terraform_provision:
@@ -16,6 +27,8 @@ jobs:
       TF_VAR_subscription_id: ${{secrets.subscription_id}}
       TF_VAR_admin_password: ${{secrets.admin_password}} # These are for the VMs
       TF_VAR_admin_username: ${{secrets.admin_username}} # These are for the VMs
+      TF_VAR_fe_full_image_name: ${{vars.DOCKERHUB_USERNAME}}/${{vars.FRONTEND_IMAGE_NAME}}:${{ inputs.fe_image_tag != '' && inputs.fe_image_tag || 'latest' }}
+      TF_VAR_be_full_image_name: ${{vars.DOCKERHUB_USERNAME}}/${{vars.BACKEND_IMAGE_NAME}}:${{ inputs.be_image_tag != '' && inputs.be_image_tag || 'latest' }}
 
     steps:
       - name: Checkout code

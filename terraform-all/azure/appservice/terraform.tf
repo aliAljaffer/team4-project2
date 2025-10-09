@@ -19,11 +19,15 @@ resource "azurerm_linux_web_app" "frontend_app" {
 
 
   app_settings = {
-    REACT_APP_API_URL                     = "https://${local.app_gateway_ip}/api"
+    VITE_API_BASE_URL                     = "http://${local.app_gateway_ip}"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
     "APPINSIGHTS_INSTRUMENTATIONKEY"      = var.instrumentation_key
     #"APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.insights.connection_string
   }
+
+  # lifecycle {
+  #   ignore_changes = [site_config[0].application_stack[0].docker_image_name]
+  # }
 }
 
 resource "azurerm_service_plan" "fe_plan" {
@@ -44,14 +48,14 @@ resource "azurerm_linux_web_app" "backend_app" {
 
   site_config {
     always_on = true
-    # cors {
-    #   allowed_origins = ["https://${local.app_gateway_ip}"]
-    # }
+    cors {
+      allowed_origins = [local.app_gateway_ip != null ? "http://${local.app_gateway_ip}" : "*"]
+    }
     application_stack {
       docker_image_name   = var.be_full_image_name
       docker_registry_url = "https://index.docker.io"
     }
-    health_check_path                 = "/health"
+    health_check_path                 = "/api/health"
     health_check_eviction_time_in_min = 5
   }
 
@@ -77,7 +81,7 @@ resource "azurerm_linux_web_app" "backend_app" {
     SERVER_PORT = 8080
 
     # CORS Configuration
-    CORS_ALLOWED_ORIGINS = "https://${local.app_gateway_ip}"
+    CORS_ALLOWED_ORIGINS = "http://${local.app_gateway_ip}"
 
     # Rate Limiting
     RATE_LIMIT_WINDOW_MS    = 900000
@@ -95,9 +99,13 @@ resource "azurerm_linux_web_app" "backend_app" {
     JWT_EXPIRES_IN = "7d"
 
     # CORS Configuration
-    CORS_ORIGIN = "https://${local.app_gateway_ip}"
+    CORS_ORIGIN = "http://${local.app_gateway_ip}"
 
   }
+
+  # lifecycle {
+  #   ignore_changes = [site_config[0].application_stack[0].docker_image_name]
+  # }
 }
 
 resource "azurerm_service_plan" "be_plan" {
@@ -108,16 +116,16 @@ resource "azurerm_service_plan" "be_plan" {
   sku_name            = "P1v3"
 }
 
-# VNet Integration
-resource "azurerm_app_service_virtual_network_swift_connection" "frontend_vnet_integration" {
-  app_service_id = azurerm_linux_web_app.frontend_app.id
-  subnet_id      = var.fe_subnet_id
-}
+# # VNet Integration
+# resource "azurerm_app_service_virtual_network_swift_connection" "frontend_vnet_integration" {
+#   app_service_id = azurerm_linux_web_app.frontend_app.id
+#   subnet_id      = var.fe_subnet_id
+# }
 
-resource "azurerm_app_service_virtual_network_swift_connection" "backend_vnet_integration" {
-  app_service_id = azurerm_linux_web_app.backend_app.id
-  subnet_id      = var.be_subnet_id
-}
+# resource "azurerm_app_service_virtual_network_swift_connection" "backend_vnet_integration" {
+#   app_service_id = azurerm_linux_web_app.backend_app.id
+#   subnet_id      = var.be_subnet_id
+# }
 
 # Private Endpoints
 resource "azurerm_private_endpoint" "frontend_pe" {

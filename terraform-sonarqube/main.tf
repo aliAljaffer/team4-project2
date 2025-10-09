@@ -24,5 +24,12 @@ module "vm" {
   admin_password          = var.admin_password
   admin_username          = var.admin_username
   resource_prefix         = var.resource_prefix
+  NEW_ADMIN_PASSWORD      = var.NEW_ADMIN_PASSWORD
+}
 
+module "keyvault" {
+  source          = "./azure/keyvault"
+  rg_name         = module.rg.name
+  rg_location     = module.rg.location
+  resource_prefix = var.resource_prefix
 }

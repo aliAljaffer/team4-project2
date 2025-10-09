@@ -7,7 +7,6 @@ on:
             - "terraform-sonarqube/**"
             - "**.md"
             - ".gitignore"
-
 jobs:
     detect-changes:
         runs-on: ubuntu-latest
@@ -44,8 +43,7 @@ jobs:
         uses: ./.github/workflows/fe.yml
         secrets: inherit
         with:
-            sonarqube_token: ${{ needs.run-sonarqube.outputs.sonar_token }}
-            sonarqube_host: ${{ needs.run-sonarqube.outputs.url }}
+            sonarqube_host: ${{ needs.run-sonarqube.outputs.sonar_url }}
 
     build-backend:
         needs: [detect-changes, run-sonarqube]
@@ -53,8 +51,7 @@ jobs:
         uses: ./.github/workflows/be.yml
         secrets: inherit
         with:
-            sonarqube_token: ${{ needs.run-sonarqube.outputs.sonar_token }}
-            sonarqube_host: ${{ needs.run-sonarqube.outputs.url }}
+            sonarqube_host: ${{ needs.run-sonarqube.outputs.sonar_url }}
 
     deploy-infrastructure:
         needs: [detect-changes, build-frontend, build-backend]
@@ -67,6 +64,9 @@ jobs:
              needs.detect-changes.outputs.terraform == 'true')
         uses: ./.github/workflows/infrastructure.yml
         secrets: inherit
+        with:
+            be_image_tag: ${{ needs.build-backend.outputs.be_image_tag }}
+            fe_image_tag: ${{ needs.build-frontend.outputs.fe_image_tag }}
 
     workflow-summary:
         needs:

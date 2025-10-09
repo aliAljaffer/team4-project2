@@ -20,7 +20,10 @@ resource "azurerm_linux_virtual_machine" "sq_vm" {
   }
   network_interface_ids = [azurerm_network_interface.sq_nic.id]
 
-  custom_data = filebase64("${path.module}/cloud-init/sonarqube-install.sh")
+  custom_data = base64encode(templatefile("${path.module}/cloud-init/sonarqube-install.sh", {
+    NEW_ADMIN_PASSWORD = var.NEW_ADMIN_PASSWORD
+  }))
+
 }
 
 resource "azurerm_public_ip" "pip" {

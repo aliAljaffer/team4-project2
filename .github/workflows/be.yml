@@ -7,19 +7,19 @@ on:
         description: "the host URL"
         type: string
         required: true
-      sonarqube_token:
-        description: "SonarQube Token"
-        type: string
-        required: true
+    outputs:
+      be_image_tag:
+        description: just the backend tag
+        value: ${{jobs.build_test_scan_push_be.outputs.be_image_tag}}
 
 env:
-  be_image_name: "be-team4-project2"
+  TF_WORKING_DIR: ./terraform-sonarqube
 
 jobs:
   build_test_scan_push_be:
     runs-on: ubuntu-latest
     outputs:
-      TF_VAR_be_full_image_name: ${{steps.output-step.outputs.be_full_image_name}}
+      be_image_tag: ${{steps.output-step.outputs.be_image_tag}}
     steps:
       - name: checkout the repository
         uses: actions/checkout@v5
@@ -43,10 +43,35 @@ jobs:
         working-directory: ./backend
         run: mvn test
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{env.TF_WORKING_DIR}}
+        run: terraform init
+
+      - name: Retrieve Sonar Token
+        run: |
+          KeyVaultName=$(cd ${{env.TF_WORKING_DIR}} && terraform output -raw kv_name)
+          SONAR_TOKEN=$(az keyvault secret show \
+            --vault-name "$KeyVaultName" \
+            --name "sonarqube-token" \
+            --query "value" -o tsv)
+
+          echo "::add-mask::$SONAR_TOKEN"
+          echo "::add-mask::$KeyVaultName"
+          echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
-          SONAR_TOKEN: ${{ inputs.sonarqube_token }}
           SONAR_HOST_URL: ${{ inputs.sonarqube_host }}
         with:
           args: >
@@ -59,7 +84,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up QEMU
@@ -74,8 +99,8 @@ jobs:
           push: true
           context: ./backend
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:${{env.COMMIT_VERSION}}
-      - name: Output image name
+            ${{ vars.DOCKERHUB_USERNAME }}/${{vars.BACKEND_IMAGE_NAME}}:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/${{vars.BACKEND_IMAGE_NAME}}:${{env.COMMIT_VERSION}}
+      - name: Output image tag
         id: output-step
-        run: echo "be_full_image_name=${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:${{env.COMMIT_VERSION}}" >> $GITHUB_OUTPUT
+        run: echo "be_image_tag=${{env.COMMIT_VERSION}}" >> $GITHUB_OUTPUT

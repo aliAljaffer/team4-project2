@@ -84,6 +84,7 @@ module "appservices" {
   be_full_image_name             = var.be_full_image_name
   app_gateway_id                 = module.agw.app_gateway_id
   app_service_zone_id            = module.pdns.app_service_zone_id
+  appgw_subnet_id                = module.subnet.appgw_subnet_id
 }
 
 module "monitoring" {
@@ -99,3 +100,4 @@ module "monitoring" {
   app_gateway_id  = module.agw.app_gateway_id
   sql_server_id   = module.db.sql_server_id
 }
+
