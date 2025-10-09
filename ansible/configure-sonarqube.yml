@@ -7,7 +7,6 @@
     default_user: admin
     default_password: admin
     token_name: "ci-token-{{ lookup('pipe', 'date +%s') }}"
-
   tasks:
     - name: Wait for SonarQube to be ready
       uri:
@@ -21,6 +20,17 @@
       until: sonar_status.json.status == "UP"
       retries: 30
       delay: 12
+
+    - name: Check if default password still works
+      uri:
+        url: "{{ sonar_url }}/api/authentication/validate"
+        method: GET
+        user: "{{ default_user }}"
+        password: "{{ default_password }}"
+        force_basic_auth: yes
+        status_code: [200, 401]
+      register: default_auth_check
+      failed_when: false
 
     - name: Change default admin password
       uri:
@@ -36,25 +46,34 @@
           password: "{{ new_admin_password }}"
         status_code: [200, 204]
       register: password_change
+      when: default_auth_check.status == 200
       failed_when: false
 
-    - name: Check if password was already changed
+    - name: Determine which password to use
+      set_fact:
+        current_password: "{{ new_admin_password if (default_auth_check.status == 401 or password_change.status in [200, 204]) else default_password }}"
+
+    - name: Verify current credentials work
       uri:
         url: "{{ sonar_url }}/api/authentication/validate"
         method: GET
         user: "{{ default_user }}"
-        password: "{{ new_admin_password }}"
+        password: "{{ current_password }}"
         force_basic_auth: yes
         status_code: 200
-      register: auth_check
-      when: password_change.status not in [200, 204]
+      register: auth_verification
+
+    - name: Wait for password change to propagate
+      pause:
+        seconds: 3
+      when: password_change.changed | default(false)
 
     - name: Generate SonarQube token
       uri:
         url: "{{ sonar_url }}/api/user_tokens/generate"
         method: POST
         user: "{{ default_user }}"
-        password: "{{ new_admin_password }}"
+        password: "{{ current_password }}"
         force_basic_auth: yes
         body_format: form-urlencoded
         body:
