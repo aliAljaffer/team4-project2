@@ -350,9 +350,9 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 # Alert 3: SQL DTU Utilization >80%
 resource "azurerm_monitor_metric_alert" "sql_alert" {
   name                = "${var.resource_prefix}-dtu-alert"
-  resource_group_name = azurerm_resource_group.main_rg.name
+  resource_group_name = var.rg_name
   severity            = 2
-  scopes              = [azurerm_mssql_server.sql_server.id]
+  scopes              = [var.sql_server_id]
   description         = "Alert when DTU consumption is greater than 80%"
   frequency           = "PT1M"
   window_size         = "PT5M"

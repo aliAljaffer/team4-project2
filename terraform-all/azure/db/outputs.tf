@@ -3,6 +3,11 @@ output "sql_server_name" {
   sensitive   = false
   value       = azurerm_mssql_server.sql_server.name
 }
+output "sql_server_name" {
+  description = "The ID of the SQL server"
+  sensitive   = false
+  value       = azurerm_mssql_server.sql_server.id
+}
 output "administrator_login_password" {
   sensitive = false
   value     = azurerm_mssql_server.sql_server.administrator_login_password

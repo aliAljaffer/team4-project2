@@ -34,3 +34,6 @@ variable "backend_app_id" {
 variable "app_gateway_id" {
   type = string
 }
+variable "sql_server_id" {
+  type = string
+}
