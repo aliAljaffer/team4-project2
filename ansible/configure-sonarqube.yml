@@ -99,7 +99,7 @@
           name: "{{ token_name }}"
         status_code: 200
       register: token_response
-      no_log: true
+      no_log: false
 
     - name: Set token fact
       set_fact:
@@ -126,7 +126,7 @@
         content: "{{ sonar_token }}"
         dest: /tmp/sonar_token
         mode: "0600"
-      no_log: true
+      no_log: false
 
     - name: Display success message
       debug:
