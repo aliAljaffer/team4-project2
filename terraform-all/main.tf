@@ -97,4 +97,5 @@ module "monitoring" {
   frontend_app_id = module.appservices.frontend_app_id
   backend_app_id  = module.appservices.backend_app_id
   app_gateway_id  = module.agw.app_gateway_id
+  sql_server_id   = module.db.sql_server_id
 }
