@@ -1,10 +1,7 @@
 name: Infrastructure Provisioning
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   terraform_provision:
@@ -14,11 +11,11 @@ jobs:
         working-directory: ./terraform-all
 
     env:
-      TF_VARsql_admin_username: ${{ secrets.sql_admin_username }}
+      TF_VAR_sql_admin_username: ${{ secrets.sql_admin_username }}
       TF_VAR_sql_admin_password: ${{ secrets.sql_admin_password }}
       TF_VAR_subscription_id: ${{secrets.subscription_id}}
-      TF_VAR_admin_password: ${{secrets.admin_password}}
-      TF_VAR_admin_username: ${{secrets.admin_username}}
+      TF_VAR_admin_password: ${{secrets.admin_password}} # These are for the VMs
+      TF_VAR_admin_username: ${{secrets.admin_username}} # These are for the VMs
 
     steps:
       - name: Checkout code
@@ -40,5 +37,5 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -lock=false
+      - name: Terraform Apply using the plan from the previous step
+        run: terraform apply tfplan -auto-approve
