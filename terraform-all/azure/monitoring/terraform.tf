@@ -348,6 +348,28 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 }
 
 # Alert 3: SQL DTU Utilization >80%
+resource "azurerm_monitor_metric_alert" "sql_alert" {
+  name                = "${var.resource_prefix}-dtu-alert"
+  resource_group_name = azurerm_resource_group.main_rg.name
+  severity            = 2
+  scopes              = [azurerm_mssql_server.sql_server.id]
+  description         = "Alert when DTU consumption is greater than 80%"
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Sql/servers"
+    metric_name      = "dtu_consumption_percent"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.action_group.id
+  }
+}
+# Alert 3: SQL DTU Utilization >80%
 # resource "azurerm_monitor_metric_alert" "sql_dtu" {
 #   name                = "${var.resource_prefix}-sql-dtu-alert"
 #   resource_group_name = var.rg_name
