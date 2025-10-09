@@ -151,26 +151,39 @@ resource "azurerm_monitor_metric_alert" "backend_cpu" {
 }
 
 # Alert 3: SQL DTU Utilization >80%
-# resource "azurerm_monitor_metric_alert" "sql_dtu" {
-#   name                = "${var.resource_prefix}-sql-dtu-alert"
-#   resource_group_name = azurerm_resource_group.main_rg.name
-#   scopes              = [azurerm_mssql_database.sql_database.id]
-#   description         = "SQL DTU Utilization >80%"
-#   severity            = 3
-#   frequency           = "PT5M"
+resource "azurerm_monitor_diagnostic_setting" "sql" {
+  name                       = "${var.resource_prefix}-sql-diag"
+  target_resource_id        = azurerm_mssql_database.sql_database.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics.id
 
-#   criteria {
-#     metric_namespace = "Microsoft.Sql/servers/databases"
-#     metric_name      = "dtu_consumption_percent"
-#     aggregation      = "Average"
-#     operator         = "GreaterThan"
-#     threshold        = 80
-#   }
+  enabled_log {
+    category = "SQLInsights"
+  }
 
-#   action {
-#     action_group_id = azurerm_monitor_action_group.action_group.id
-#   }
-# }
+  enabled_metric {
+    category = "Basic"
+  }
+}
+
+resource "azurerm_monitor_metric_alert" "sql-alert" {
+  name                = "${var.resource_prefix}-dtu-alert"
+  resource_group_name = azurerm_resource_group.main_rg.name
+  severity            = 3
+  scopes              = [azurerm_mssql_database.sql_database.id]
+  description         = "Alert when DTU consumption is greater than 80%"
+
+  criteria {
+    metric_namespace = "Microsoft.Sql/servers/databases"
+    metric_name      = "dtu_consumption_percent"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.action_group.id
+  }
+}
 
 # # Autoscaling for Frontend App Service Plan
 # resource "azurerm_monitor_autoscale_setting" "asp_autoscale_frontend" {
