@@ -46,9 +46,11 @@ variable "admin_username" {
   sensitive   = true
 }
 variable "be_full_image_name" {
-  type = string
+  type    = string
+  default = "almusajin/ecommerce-backend:latest"
 }
 variable "fe_full_image_name" {
-  type = string
+  type    = string
+  default = "almusajin/ecommerce-frontend:latest"
 }
 
