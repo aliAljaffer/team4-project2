@@ -55,6 +55,14 @@ resource "azurerm_subnet" "vm_subnet" {
   resource_group_name  = azurerm_resource_group.main_rg.name
   address_prefixes     = ["10.0.20.0/24"]
 }
+
+resource "azurerm_subnet" "endpoint_subnet" {
+  name                 = "${var.resource_prefix}-endpoint-subnet"
+  resource_group_name  = azurerm_resource_group.main_rg.name
+  virtual_network_name = azurerm_virtual_network.main_vnet.name
+  address_prefixes     = ["10.0.8.0/24"]
+}
+
 # Outputs
 # -----------------
 

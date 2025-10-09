@@ -37,6 +37,7 @@ resource "azurerm_linux_web_app" "frontend_app" {
   location                  = azurerm_resource_group.main_rg.location
   service_plan_id           = azurerm_service_plan.fe_plan.id
   virtual_network_subnet_id = azurerm_subnet.frontend_subnet.id
+  public_network_access_enabled = false
 
   site_config {
 
@@ -72,6 +73,7 @@ resource "azurerm_linux_web_app" "backend_app" {
   location                  = azurerm_resource_group.main_rg.location
   service_plan_id           = azurerm_service_plan.be_plan.id
   virtual_network_subnet_id = azurerm_subnet.backend_subnet.id
+  public_network_access_enabled = false
 
   site_config {
     always_on = true
@@ -138,6 +140,57 @@ resource "azurerm_service_plan" "be_plan" {
   os_type             = "Linux"
   sku_name            = "P1v3"
 }
+
+# VNet Integration
+resource "azurerm_app_service_virtual_network_swift_connection" "frontend_vnet_integration" {
+  app_service_id = azurerm_linux_web_app.frontend_app.id
+  subnet_id      = azurerm_subnet.frontend_subnet.id
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "backend_vnet_integration" {
+  app_service_id = azurerm_linux_web_app.backend_app.id
+  subnet_id      = azurerm_subnet.backend_subnet.id
+}
+
+# Private Endpoints
+resource "azurerm_private_endpoint" "frontend_pe" {
+  name                = "${local.frontend_app_name}-pe"
+  location            = azurerm_resource_group.main_rg.location
+  resource_group_name = azurerm_resource_group.main_rg.name
+  subnet_id           = azurerm_subnet.endpoint_subnet.id
+
+  private_service_connection {
+    name                           = "${local.frontend_app_name}-psc"
+    private_connection_resource_id = azurerm_linux_web_app.frontend_app.id
+    subresource_names              = ["sites"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "${local.frontend_app_name}-dns"
+    private_dns_zone_ids = [azurerm_private_dns_zone.app_services_dns.id]
+  }
+}
+
+resource "azurerm_private_endpoint" "backend_pe" {
+  name                = "${local.backend_app_name}-pe"
+  location            = azurerm_resource_group.main_rg.location
+  resource_group_name = azurerm_resource_group.main_rg.name
+  subnet_id           = azurerm_subnet.endpoint_subnet.id
+
+  private_service_connection {
+    name                           = "${local.backend_app_name}-psc"
+    private_connection_resource_id = azurerm_linux_web_app.backend_app.id
+    subresource_names              = ["sites"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "${local.backend_app_name}-dns"
+    private_dns_zone_ids = [azurerm_private_dns_zone.app_services_dns.id]
+  }
+}
+
 # -----------------
 
 # Outputs
@@ -148,6 +201,14 @@ output "frontend_app_hostname" {
 
 output "backend_app_hostname" {
   value = azurerm_linux_web_app.backend_app.default_hostname
+}
+
+output "frontend_private_endpoint_ip" {
+  value = azurerm_private_endpoint.frontend_pe.private_service_connection[0].private_ip_address
+}
+
+output "backend_private_endpoint_ip" {
+  value = azurerm_private_endpoint.backend_pe.private_service_connection[0].private_ip_address
 }
 # -----------------
 
