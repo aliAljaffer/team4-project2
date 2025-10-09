@@ -1,15 +1,7 @@
-# Variables
-# ------------------
-
-# Locals
-# ------------------
-
-# Resources
-# -----------------
 resource "azurerm_linux_virtual_machine" "virtual_machine" {
   name                  = var.virtual_machine_name
-  location              = var.location
-  resource_group_name   = azurerm_resource_group.main_rg.name
+  location              = var.rg_location
+  resource_group_name   = var.rg_name
   network_interface_ids = [azurerm_network_interface.network_interface_card.id]
   size                  = var.vm_size
 
@@ -27,8 +19,8 @@ resource "azurerm_linux_virtual_machine" "virtual_machine" {
   }
 
   computer_name                   = var.virtual_machine_name
-  admin_username                  = var.vm_admin_username
-  admin_password                  = var.vm_admin_password
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = var.vm_disable_password_authentication
 
 
@@ -36,12 +28,12 @@ resource "azurerm_linux_virtual_machine" "virtual_machine" {
 
 resource "azurerm_network_interface" "network_interface_card" {
   name                = "networkInterface"
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
 
   ip_configuration {
     name                          = "configuration"
-    subnet_id                     = azurerm_subnet.vm_subnet.id
+    subnet_id                     = var.vm_subnet_id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -49,8 +41,7 @@ resource "azurerm_network_interface" "network_interface_card" {
 
 resource "azurerm_public_ip" "pip" {
   name                = "pip1"
-  resource_group_name = azurerm_resource_group.main_rg.name
-  location            = azurerm_resource_group.main_rg.location
+  location            = var.rg_location
+  resource_group_name = var.rg_name
   allocation_method   = "Static"
 }
-

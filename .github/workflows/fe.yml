@@ -17,6 +17,8 @@ env:
 jobs:
   build_test_scan_push_fe:
     runs-on: ubuntu-latest
+    outputs:
+      TF_VAR_fe_full_image_name: ${{steps.output-step.outputs.fe_full_image_name}}
     steps:
       - name: checkout the repository
         uses: actions/checkout@v5
@@ -72,3 +74,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{env.fe_image_name}}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{env.fe_image_name}}:${{env.COMMIT_VERSION}}
+
+      - name: Output image name
+        id: output-step
+        run: echo "fe_full_image_name=${{ secrets.DOCKERHUB_USERNAME }}/${{env.fe_image_name}}:${{env.COMMIT_VERSION}}" >> $GITHUB_OUTPUT

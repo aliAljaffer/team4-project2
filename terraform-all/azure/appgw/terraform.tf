@@ -1,51 +1,7 @@
-# Variables
-# ------------------
-variable "app_gateway_sku" {
-
-  description = "The SKU of the Application Gateway."
-  type        = string
-  default     = "WAF_v2"
-}
-variable "app_gateway_tier" {
-
-  description = "The tier of the Application Gateway."
-  type        = string
-  default     = "WAF_v2"
-
-}
-variable "app_gateway_capacity" {
-
-  description = "The capacity of the Application Gateway."
-  type        = number
-  default     = 2
-
-}
-
-
-# Locals
-# ------------------
-
-locals {
-  backend_address_pool_name      = "${var.resource_prefix}-backend-pool"
-  frontend_port_name             = "${var.resource_prefix}-frontend-port"
-  frontend_ip_configuration_name = "${var.resource_prefix}-frontend-ip-config"
-  http_setting_name              = "${var.resource_prefix}-http-setting"
-  listener_name                  = "${var.resource_prefix}-listener"
-  frontend_path_rule_name        = "${var.resource_prefix}-path-rule"
-  redirect_configuration_name    = "${var.resource_prefix}-redirect-config"
-
-  frontend_probe_name = "${var.resource_prefix}-frontend-probe"
-  backend_probe_name  = "${var.resource_prefix}-backend-probe"
-
-}
-
-
-# Resources
-# -----------------
 resource "azurerm_public_ip" "appGW_public_ip" {
   name                = "${var.resource_prefix}-public-ip"
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
   allocation_method   = "Static"
   sku                 = "Standard"
 
@@ -56,8 +12,8 @@ resource "azurerm_public_ip" "appGW_public_ip" {
 
 resource "azurerm_application_gateway" "appGW" {
   name                = "${var.resource_prefix}-appgw"
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
 
   sku {
     name     = var.app_gateway_sku
@@ -66,7 +22,7 @@ resource "azurerm_application_gateway" "appGW" {
   }
   gateway_ip_configuration {
     name      = "${var.resource_prefix}-appgw-ip-config"
-    subnet_id = azurerm_subnet.appgw_subnet.id
+    subnet_id = var.app_gateway_subnet_id
   }
   frontend_port {
     name = local.frontend_port_name
@@ -82,11 +38,11 @@ resource "azurerm_application_gateway" "appGW" {
   }
   backend_address_pool {
     name  = "${local.backend_address_pool_name}-frontend"
-    fqdns = [azurerm_linux_web_app.frontend_app.default_hostname]
+    fqdns = [var.frontend_app_hostname]
   }
   backend_address_pool {
     name  = "${local.backend_address_pool_name}-backend"
-    fqdns = [azurerm_linux_web_app.backend_app.default_hostname]
+    fqdns = [var.backend_app_hostname]
   }
   backend_http_settings {
     name                  = "${local.http_setting_name}-frontend"
@@ -95,7 +51,7 @@ resource "azurerm_application_gateway" "appGW" {
     protocol              = "Https"
     request_timeout       = 30
     probe_name            = local.frontend_probe_name
-    host_name             = azurerm_linux_web_app.frontend_app.default_hostname
+    host_name             = var.frontend_app_hostname
   }
   backend_http_settings {
     name                  = "${local.http_setting_name}-backend"
@@ -104,12 +60,12 @@ resource "azurerm_application_gateway" "appGW" {
     protocol              = "Https"
     request_timeout       = 30
     probe_name            = local.backend_probe_name
-    host_name             = azurerm_linux_web_app.backend_app.default_hostname
+    host_name             = var.backend_app_hostname
   }
   probe {
     name                = local.frontend_probe_name
     protocol            = "Https"
-    host                = azurerm_linux_web_app.frontend_app.default_hostname
+    host                = var.frontend_app_hostname
     path                = "/"
     interval            = 30
     timeout             = 30
@@ -121,7 +77,7 @@ resource "azurerm_application_gateway" "appGW" {
   probe {
     name                = local.backend_probe_name
     protocol            = "Https"
-    host                = azurerm_linux_web_app.backend_app.default_hostname
+    host                = var.backend_app_hostname
     path                = "/health"
     interval            = 30
     timeout             = 30
@@ -178,8 +134,8 @@ resource "azurerm_application_gateway" "appGW" {
 
 resource "azurerm_network_security_group" "appGW_nsg" {
   name                = "${var.resource_prefix}-appgw-nsg"
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
 
   security_rule {
     name                       = "Allow-HTTP"
@@ -222,28 +178,8 @@ resource "azurerm_network_security_group" "appGW_nsg" {
 
 }
 resource "azurerm_subnet_network_security_group_association" "appGW_subnet_nsg_assoc" {
-  subnet_id                 = azurerm_subnet.appgw_subnet.id
+  subnet_id                 = var.app_gateway_subnet_id
   network_security_group_id = azurerm_network_security_group.appGW_nsg.id
 
-
-}
-
-
-# Outputs
-# -----------------
-
-output "app_gateway_public_ip" {
-  description = "The public IP address of the Application Gateway."
-  value       = azurerm_public_ip.appGW_public_ip.ip_address
-
-}
-output "app_gateway_id" {
-  description = "The ID of the Application Gateway."
-  value       = azurerm_application_gateway.appGW.id
-
-}
-output "app_gateway_name" {
-  description = "The name of the Application Gateway."
-  value       = azurerm_application_gateway.appGW.name
 
 }

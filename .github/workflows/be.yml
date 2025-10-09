@@ -18,6 +18,8 @@ env:
 jobs:
   build_test_scan_push_be:
     runs-on: ubuntu-latest
+    outputs:
+      TF_VAR_be_full_image_name: ${{steps.output-step.outputs.be_full_image_name}}
     steps:
       - name: checkout the repository
         uses: actions/checkout@v5
@@ -74,3 +76,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:${{env.COMMIT_VERSION}}
+      - name: Output image name
+        id: output-step
+        run: echo "be_full_image_name=${{ secrets.DOCKERHUB_USERNAME }}/${{env.be_image_name}}:${{env.COMMIT_VERSION}}" >> $GITHUB_OUTPUT
