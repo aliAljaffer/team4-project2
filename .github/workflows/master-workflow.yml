@@ -3,10 +3,14 @@ name: Master CI/CD Pipeline
 on:
     push:
         branches: [main]
-        paths-ignore:
+        paths:
+            - "ansible/**"
+            - "terraform-all/**"
             - "terraform-sonarqube/**"
-            - "**.md"
-            - ".gitignore"
+            - ".github/workflows/**"
+            - "backend/**"
+            - "frontend/**"
+
 jobs:
     detect-changes:
         runs-on: ubuntu-latest
