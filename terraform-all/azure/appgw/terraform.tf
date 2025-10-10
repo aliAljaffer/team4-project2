@@ -78,7 +78,7 @@ resource "azurerm_application_gateway" "appGW" {
     name                = local.backend_probe_name
     protocol            = "Https"
     host                = var.backend_app_hostname
-    path                = "/health"
+    path                = "/api/health"
     interval            = 30
     timeout             = 30
     unhealthy_threshold = 3
@@ -107,7 +107,7 @@ resource "azurerm_application_gateway" "appGW" {
     default_backend_http_settings_name = "${local.http_setting_name}-frontend"
     path_rule {
       name                      = "${local.frontend_path_rule_name}-backend-api"
-      paths                     = ["/api/*", "/health"]
+      paths                     = ["/api/*"]
       backend_address_pool_name = "${local.backend_address_pool_name}-backend"
 
       backend_http_settings_name = "${local.http_setting_name}-backend"
