@@ -18,6 +18,7 @@ jobs:
             frontend: ${{ steps.filter.outputs.frontend }}
             backend: ${{ steps.filter.outputs.backend }}
             terraform: ${{ steps.filter.outputs.terraform }}
+            terraform-sq: ${{ steps.filter.outputs.terraform-sq }}
         steps:
             - name: Checkout
               uses: actions/checkout@v5
@@ -33,11 +34,12 @@ jobs:
                         - 'backend/**'
                       terraform:
                         - 'terraform-all/**'
-                        - '!terraform-sonarqube/**'
+                      terraform-sq:
+                        - 'terraform-sonarqube/**'
 
     run-sonarqube:
         needs: detect-changes
-        if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true'
+        if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.terraform-sq
         uses: ./.github/workflows/sonarqube.yml
         secrets: inherit
 
@@ -91,7 +93,8 @@ jobs:
                   echo "### Changes Detected" >> $GITHUB_STEP_SUMMARY
                   echo "- **Frontend**: ${{ needs.detect-changes.outputs.frontend == 'true' && ' Changed' || ' No changes' }}" >> $GITHUB_STEP_SUMMARY
                   echo "- **Backend**: ${{ needs.detect-changes.outputs.backend == 'true' && ' Changed' || ' No changes' }}" >> $GITHUB_STEP_SUMMARY
-                  echo "- **Terraform**: ${{ needs.detect-changes.outputs.terraform == 'true' && ' Changed' || ' No changes' }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Terraform Infra**: ${{ needs.detect-changes.outputs.terraform == 'true' && ' Changed' || ' No changes' }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Terraform SonarQube**: ${{ needs.detect-changes.outputs.terraform == 'true' && ' Changed' || ' No changes' }}" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "### Workflow Execution Results" >> $GITHUB_STEP_SUMMARY
                   echo "| Workflow | Status |" >> $GITHUB_STEP_SUMMARY
