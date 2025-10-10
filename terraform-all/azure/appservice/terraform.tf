@@ -65,42 +65,19 @@ resource "azurerm_linux_web_app" "backend_app" {
     # Azure SQL Database (Production)
     DB_HOST = var.db_fully_qualified_domain_name
 
-    DB_PORT                     = var.db_port
-    DB_NAME                     = var.sql_database_name
-    DB_USERNAME                 = var.administrator_login
-    DB_PASSWORD                 = var.administrator_login_password
-    DB_DRIVER                   = var.db_driver
-    DB_ENCRYPT                  = true
-    DB_TRUST_SERVER_CERTIFICATE = false
-    DB_CONNECTION_TIMEOUT       = 30000
+    DB_PORT     = var.db_port
+    DB_NAME     = var.sql_database_name
+    DB_USERNAME = var.administrator_login
+    DB_PASSWORD = var.administrator_login_password
+    DB_DRIVER   = var.db_driver
 
-    # Spring Profile - Set to 'azure' for Azure SQL, 'docker' for PostgreSQL
     SPRING_PROFILES_ACTIVE = "azure"
 
     # Server Configuration
     SERVER_PORT = 8080
 
     # CORS Configuration
-    CORS_ALLOWED_ORIGINS = "http://${local.app_gateway_ip}"
-
-    # Rate Limiting
-    RATE_LIMIT_WINDOW_MS    = 900000
-    RATE_LIMIT_MAX_REQUESTS = 100
-
-
-    # ---------- ENV FROM PROJECT 1
-    # Server Configuration
-    PORT      = 3001
-    NODE_ENV  = "development"
-    DB_SERVER = var.db_fully_qualified_domain_name
-    DB_USER   = var.administrator_login
-    # JWT Configuration
-    JWT_SECRET     = "your-super-secret-jwt-key-here"
-    JWT_EXPIRES_IN = "7d"
-
-    # CORS Configuration
-    CORS_ORIGIN = "http://${local.app_gateway_ip}"
-
+    CORS_ALLOWED_ORIGINS = "http://${local.app_gateway_ip},http://localhost:8080,http://localhost:5173"
   }
 
   # lifecycle {
