@@ -27,8 +27,28 @@ The main goal is to **fully automate** the deployment of a three-tier web app, f
 1. Images with commit-based tags. Helps to track changes when using commit hashes as image versions.
 2. Secure connections using Private Endpoints for the Database layer and App Services. The only public-facing point-of-contact is the application gateway, which takes care of the pathing.
 3. Monitoring and Autoscaling ensure the app will react to the workload it's under.
-4. Efficient CI/CD pipelines for Docker images, detecting only what tier was changed and performing the appropriate workflow for it, without creating unnecessary copies of images.
-5. Cost-efficient scanning using SonarQube hosted on a VM. This VM is provisioned in case of changes to the frontend or backend code, to assist in the scanning step. The last step of the pipeline is to delete this VM, so it's only available during the pipeline lifecycle.
+4. Efficient CI/CD pipelines that are orchestrated by a singular master workflow that will trigger the appropriate pipeline based on which directories changed.
+5. Scanning of the repository is done via SonarQube hosted on a VM. The SonarQube is deployed separately from the rest of the application.
+
+## System Design - Ali Aljaffer
+
+### System Architecture
+
+![](./documents/images/system-architecture.png)
+
+A brief overview on the main components of the system. Key Vault is used in the CI/CD pipelines to update and retrieve the SonarQube token, and will soon also use it to store other secrets such as Dockerhub Token.
+
+## CI/CD Pipelines as a Whole
+
+![](./documents/images/pipelines.png)
+
+In the diagram we see the distinct 4 pipelines: [Sonarqube](./.github/workflows/sonarqube.yml), [Frontend](./.github/workflows/fe.yml), [Backend](./.github/workflows/be.yml), and [Infrastructure](./.github/workflows/infrastructure.yml). None of these trigger on push or pull request - rather they are all orchestrated by the master workflow seen below.
+
+## The Orchestrator Workflow
+
+![](./documents/images/master-workflow.png)
+
+Depending on what changed in the push, the [Master Workflow](./.github/workflows/master-workflow.yml) will decide on which set of steps it will run. This keeps the runs efficient, and only changing what needs to be changed for the current iteration of the repository.
 
 ## Tech Stack
 
@@ -38,10 +58,7 @@ WIP
 
 WIP
 
-## System Design
-
-WIP
-
 ## Challenges
 
-WIP
+1. `(Ali)` Master Workflow: Turning the singular workflows into a working unit, taking inputs and spitting out outputs, sharing secrets between them was a fun but frustrating. By the end, I had triggered around 100 workflow runs - trying to pinpoint exactly what was going wrong.
+2. `(Ali)` Ansible Configuration: Initially, I used a [cloud-init](./terraform-sonarqube/azure/vm/cloud-init/sonarqube-install.sh) shell script that did EVERYTHING. But, I wanted to incorporate Ansible into this project, so I reduced the shell script to only downloading and running SonarQube. I let Ansible take care of changing the default Admin password and then token generation. It was challenging because this is my first time working on Ansible outside of the bootcamp's labs.
