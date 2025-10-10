@@ -1,6 +1,6 @@
 # Project 2 - Three-tier app on Azure with fully automated deployment
 
-Repo structure:
+## 📂 Repository Structure
 
 ```
 .
@@ -13,7 +13,7 @@ Repo structure:
 
 The main goal is to **fully automate** the deployment of a three-tier web app, from containerization, pushing to a registry (Dockerhub by default), to provisioning the infrastructure required on Azure. This was accomplished using modern tools such as Terraform, Ansible, and Github Actions.
 
-## Team Members
+## 👥 Team Members
 
 - Ali Aljaffer (Team Lead, Scrum Master) [github/alialjaffer](https://github.com/aliAljaffer)
 - Rashid Alharbi (DevOps Engineer) [github/Rashid0029](https://github.com/Rashid0029)
@@ -29,6 +29,33 @@ The main goal is to **fully automate** the deployment of a three-tier web app, f
 3. Monitoring and Autoscaling ensure the app will react to the workload it's under.
 4. Efficient CI/CD pipelines for Docker images, detecting only what tier was changed and performing the appropriate workflow for it, without creating unnecessary copies of images.
 5. Cost-efficient scanning using SonarQube hosted on a VM. This VM is provisioned in case of changes to the frontend or backend code, to assist in the scanning step. The last step of the pipeline is to delete this VM, so it's only available during the pipeline lifecycle.
+
+## ⚙️ Prerequisites
+### Azure CLI
+
+Installation: Install the Azure CLI by following the official guide.
+Authentication: Log in to Azure:
+bashaz login
+
+Subscription: Set your active subscription:
+bashaz account set --subscription "<subscription_id>"
+
+
+### Permissions
+
+Azure Role: Contributor or Owner role on the target subscription or resource group.
+Verification: Confirm permissions:
+bashaz role assignment list --assignee <your-user-id> --scope /subscriptions/<subscription_id>
+
+
+### Budgets/Quotas
+
+Ensure your Azure subscription has sufficient quotas for:
+
+Azure App Service (Standard or Premium tier)
+Azure SQL Database
+Virtual Machines (for SonarQube)
+Application Gateway (WAF v2 SKU recommended)
 
 ## Tech Stack
 
