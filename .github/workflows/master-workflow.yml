@@ -39,7 +39,7 @@ jobs:
 
     run-sonarqube:
         needs: detect-changes
-        if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.terraform-sq
+        if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.terraform-sq == 'true'
         uses: ./.github/workflows/sonarqube.yml
         secrets: inherit
 
