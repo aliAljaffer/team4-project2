@@ -85,7 +85,7 @@ Depending on what changed in the push, the [Master Workflow](./.github/workflows
 
 - I designed and implemented the secure cloud foundation for our 3-tier application using Terraform, focusing on zero-trust security principles and production-ready configurations.
 
-### Application Gateway (Secure Entry Point)
+### SQL Database (Secure Data Layer)
 
 - Private Endpoint Architecture: Database completely isolated from public internet with private DNS resolution
 
@@ -107,3 +107,6 @@ WIP
 
 1. `(Ali)` Master Workflow: Turning the singular workflows into a working unit, taking inputs and spitting out outputs, sharing secrets between them was a fun but frustrating. By the end, I had triggered around 100 workflow runs - trying to pinpoint exactly what was going wrong.
 2. `(Ali)` Ansible Configuration: Initially, I used a [cloud-init](./terraform-sonarqube/azure/vm/cloud-init/sonarqube-install.sh) shell script that did EVERYTHING. But, I wanted to incorporate Ansible into this project, so I reduced the shell script to only downloading and running SonarQube. I let Ansible take care of changing the default Admin password and then token generation. It was challenging because this is my first time working on Ansible outside of the bootcamp's labs.
+3. `(Abdulilah)` After provisioning the App Gateway, we encountered a 403 error when connecting to its address with no clear logs. The investigation revealed we had configured both HTTP (80) and HTTPS (443) ports simultaneously.
+We resolved this by removing the HTTPS port and adjusting other configurations, then redeploying. However, since we made multiple changes at once, we couldn't pinpoint if the duplicate ports were the root cause.
+Key Learning: Next time, we'll implement changes incrementally - make one change, test, then proceed - to accurately identify root causes.
