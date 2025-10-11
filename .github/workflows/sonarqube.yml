@@ -29,6 +29,7 @@ jobs:
       TF_VAR_admin_password: ${{secrets.admin_password}}
       TF_VAR_admin_username: ${{secrets.admin_username}}
       TF_VAR_NEW_ADMIN_PASSWORD: ${{ secrets.NEW_ADMIN_PASSWORD }}
+      TF_VAR_location: ${{vars.resources_location}}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

@@ -18,3 +18,7 @@ variable "admin_username" {
   type      = string
   sensitive = true
 }
+variable "location" {
+  type    = string
+  default = "westus2"
+}
