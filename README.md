@@ -71,6 +71,34 @@ Depending on what changed in the push, the [Master Workflow](./.github/workflows
   - Terraform
   - Ansible
 
+## Terraform Infrastructure - Abdulilah Alomrani
+
+### Application Gateway (Secure Entry Point)
+
+- WAF v2 Configuration: Deployed Web Application Firewall with OWASP 3.2 rules in prevention mode
+
+- Path-Based Routing: Intelligent traffic routing with / → frontend and /api/* → backend services
+
+- Health Monitoring: Automated health probes continuously verify service availability
+
+- Public Isolation: Single public entry point that prevents direct access to backend services
+
+- I designed and implemented the secure cloud foundation for our 3-tier application using Terraform, focusing on zero-trust security principles and production-ready configurations.
+
+### Application Gateway (Secure Entry Point)
+
+- Private Endpoint Architecture: Database completely isolated from public internet with private DNS resolution
+
+- Zero Public Access: Configured public_network_access_enabled = false to eliminate exposure
+
+- Network Security Groups: Strict firewall rules allowing only port 1433 from authorized subnets
+
+- Production Configuration: Enterprise-grade SQL setup with proper collation and scaling settings
+
+### Security & Compliance
+
+This infrastructure meets all project security requirements by ensuring no direct public access to compute resources or database, while maintaining full functionality through the Application Gateway secure proxy.
+
 ## Screenshots
 
 WIP
