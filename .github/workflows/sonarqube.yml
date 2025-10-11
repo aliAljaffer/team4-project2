@@ -38,15 +38,6 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Ansible
-        run: |
-          pip install ansible requests
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -80,6 +71,15 @@ jobs:
           done
           echo "VM did not become accessible in time"
           exit 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: |
+          pip install ansible requests
 
       - name: Configure SonarQube with Ansible
         id: configure
