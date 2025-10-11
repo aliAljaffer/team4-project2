@@ -1,6 +1,7 @@
 module "rg" {
   source          = "./azure/resourcegroup"
   resource_prefix = var.resource_prefix
+  location        = var.location
 }
 
 module "vnet" {
