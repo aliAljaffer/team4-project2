@@ -16,7 +16,6 @@ variable "rg_name" {
 
 variable "location" {
   type    = string
-  default = "westus2"
 }
 
 variable "sql_admin_username" {

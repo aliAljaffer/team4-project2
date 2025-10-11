@@ -1,6 +1,5 @@
 variable "location" {
-  type    = string
-  default = "ukwest"
+  type = string
 }
 variable "resource_prefix" {
   type = string
