@@ -21,6 +21,8 @@ resource "azurerm_mssql_database" "sql_database" {
   sku_name    = "GP_Gen5_2"
   max_size_gb = 30
 
+  storage_account_type = "Zone"
+
   tags = {
     environment = "production"
     tier        = "database"
