@@ -1,5 +1,6 @@
 *.tfvars
-
+# Keep example tf vars :)
+!**/**/*.example.tfvars
 
 
 # Environment files

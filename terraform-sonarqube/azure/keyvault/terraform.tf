@@ -11,9 +11,9 @@ resource "azurerm_key_vault" "kvault" {
     object_id = data.azurerm_client_config.current.object_id
     tenant_id = data.azurerm_client_config.current.tenant_id
 
-    key_permissions         = ["Get", "List", "Update", "Delete", "Recover", "Backup", "Restore"]
-    secret_permissions      = ["Get", "List", "Set", "Delete", "Recover", "Backup", "Restore"]
-    certificate_permissions = ["Get", "List", "Update", "Delete", "Recover", "Backup", "Restore"]
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
+    certificate_permissions = var.certificate_permissions
   }
 }
 

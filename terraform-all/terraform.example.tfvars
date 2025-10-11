@@ -1,0 +1,7 @@
+# subscription_id="Your subscription ID"
+# admin_password="testing VM admin username"
+# admin_username="testing VM admin password"
+# sql_admin_username="Azure SQL Admin Username"
+# sql_admin_password = "Azure SQL Admin Password"
+# fe_full_image_name = "Frontend: Full image name, including repo and tag. I.e. alialjaffer/frontend:latest"
+# be_full_image_name = "Backend: Full image name, including repo and tag. I.e. alialjaffer/backend:latest"

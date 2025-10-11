@@ -54,3 +54,9 @@ variable "fe_full_image_name" {
   default = "almusajin/ecommerce-frontend:latest"
 }
 
+variable "backend_health_path" {
+  type        = string
+  description = "Path to the backend's health check, starts with /"
+  default     = "/api/health"
+}
+

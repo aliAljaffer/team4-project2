@@ -52,7 +52,24 @@ Depending on what changed in the push, the [Master Workflow](./.github/workflows
 
 ## Tech Stack
 
-WIP
+- Frontend App
+
+  - Reactjs + Vite
+  - React Router
+
+- Backend App
+
+  - Java + Maven
+  - Springboot
+
+- Database
+
+  - Azure SQL for Production, PostgreSQL for Development
+
+- Infrastructure
+  - Azure Cloud
+  - Terraform
+  - Ansible
 
 ## Screenshots
 
